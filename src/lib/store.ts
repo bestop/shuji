@@ -3,9 +3,9 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { Book, Profile } from "./types";
+import type { BookInput } from "./types";
 import { SEED_BOOKS, genId } from "./seed";
-
-type BookInput = Omit<Book, "id" | "createdAt" | "sold" | "mine">;
+import { getDeviceId } from "./device";
 
 type State = {
   books: Book[];
@@ -32,7 +32,7 @@ export const useStore = create<State>()(
           id: genId(),
           createdAt: Date.now(),
           sold: false,
-          mine: true,
+          ownerId: getDeviceId(),
         };
         set({ books: [book, ...get().books] });
         return book;
@@ -67,7 +67,21 @@ export const useStore = create<State>()(
     {
       name: "shuji-book-market-v1",
       storage: createJSONStorage(() => localStorage),
-      version: 1,
+      version: 2,
+      /** v1 数据使用 mine 字段，迁移为 ownerId（本机发布的书归属于当前设备） */
+      migrate: (persisted, version) => {
+        const s = persisted as Partial<State> & { books?: (Book & { mine?: boolean })[] };
+        if (version < 2 && Array.isArray(s.books)) {
+          s.books = s.books.map((b) => {
+            const { mine, ...rest } = b;
+            return {
+              ...rest,
+              ownerId: mine ? getDeviceId() : rest.ownerId ?? "seed",
+            };
+          }) as Book[];
+        }
+        return s as State;
+      },
     }
   )
 );

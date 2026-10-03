@@ -9,6 +9,8 @@ import { PublishSheet } from "@/components/publish-sheet";
 import { ProfilePage } from "@/components/profile-page";
 import { BottomNav } from "@/components/bottom-nav";
 import { useStore } from "@/lib/store";
+import { useMarket } from "@/lib/use-market";
+import { getDeviceId } from "@/lib/device";
 import { CATEGORIES, type Book, type SortKey } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -21,12 +23,13 @@ const SORTS: { key: SortKey; label: string }[] = [
 ];
 
 export default function Page() {
-  const books = useStore((s) => s.books);
   const favoriteIds = useStore((s) => s.favoriteIds);
   const profile = useStore((s) => s.profile);
   const toggleFavorite = useStore((s) => s.toggleFavorite);
-  const toggleSold = useStore((s) => s.toggleSold);
-  const removeBook = useStore((s) => s.removeBook);
+
+  const market = useMarket();
+  const books = market.books;
+  const loading = market.loading;
 
   const [view, setView] = useState<View>("home");
   const [query, setQuery] = useState("");
@@ -68,7 +71,7 @@ export default function Page() {
     setDetailOpen(true);
   };
 
-  if (!mounted) {
+  if (!mounted || loading) {
     return (
       <main className="min-h-screen bg-background">
         <div className="mx-auto max-w-lg px-4 pt-8 sm:max-w-6xl">
@@ -97,7 +100,11 @@ export default function Page() {
               <p className="text-[11px] tracking-[0.2em] text-stone-400">让好书流动起来</p>
             </div>
             <span className="rounded-full border border-stone-200 bg-white/70 px-3 py-1 text-[11px] text-stone-500">
-              校园二手书市集
+              {market.mode === "server"
+                ? "云端市集 · 多端同步"
+                : market.mode === "local"
+                  ? "本机体验模式"
+                  : "校园二手书市集"}
             </span>
           </div>
         </div>
@@ -214,7 +221,9 @@ export default function Page() {
                     书集 · 二手书交易
                   </p>
                   <p className="mt-1 text-[10px] text-stone-300">
-                    数据保存在本机浏览器，交易请当面验书、微信沟通
+                    {market.mode === "server"
+                      ? "云端同步 · 交易请当面验书、微信沟通"
+                      : "数据保存在本机浏览器，交易请当面验书、微信沟通"}
                   </p>
                 </footer>
               </div>
@@ -230,8 +239,11 @@ export default function Page() {
               <ProfilePage
                 profile={profile}
                 books={books}
+                myId={mounted ? getDeviceId() : "server"}
                 favoriteIds={favoriteIds}
                 onOpenBook={openBook}
+                onToggleSold={(id, nextSold) => void market.toggleSold(id, nextSold)}
+                onRemoveBook={(id) => void market.removeBook(id)}
               />
             </motion.div>
           )}
@@ -249,11 +261,12 @@ export default function Page() {
         book={activeBook}
         open={detailOpen}
         onOpenChange={setDetailOpen}
+        isMine={activeBook ? activeBook.ownerId === (mounted ? getDeviceId() : "server") : false}
         isFavorite={activeBook ? favoriteIds.includes(activeBook.id) : false}
         onToggleFavorite={toggleFavorite}
-        onToggleSold={toggleSold}
+        onToggleSold={(id, nextSold) => void market.toggleSold(id, nextSold)}
         onDelete={(id) => {
-          removeBook(id);
+          void market.removeBook(id);
           setActiveId(null);
         }}
       />
@@ -262,6 +275,11 @@ export default function Page() {
         open={publishOpen}
         onOpenChange={setPublishOpen}
         profile={profile}
+        onPublish={market.addBook}
+        onGoProfile={() => {
+          setPublishOpen(false);
+          setView("profile");
+        }}
       />
     </div>
   );

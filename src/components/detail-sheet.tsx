@@ -27,9 +27,11 @@ type Props = {
   book: Book | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** 是否为当前设备发布的书籍 */
+  isMine: boolean;
   isFavorite: boolean;
   onToggleFavorite: (id: string) => void;
-  onToggleSold: (id: string) => void;
+  onToggleSold: (id: string, nextSold: boolean) => void;
   onDelete: (id: string) => void;
 };
 
@@ -37,6 +39,7 @@ export function DetailSheet({
   book,
   open,
   onOpenChange,
+  isMine,
   isFavorite,
   onToggleFavorite,
   onToggleSold,
@@ -45,7 +48,6 @@ export function DetailSheet({
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (!book) return null;
-  const isMine = book.mine;
 
   const handleContact = async () => {
     const ok = await copyText(book.sellerWechat);
@@ -173,7 +175,7 @@ export function DetailSheet({
               <>
                 <button
                   type="button"
-                  onClick={() => onToggleSold(book.id)}
+                  onClick={() => onToggleSold(book.id, !book.sold)}
                   className={cn(
                     "flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold transition-colors",
                     book.sold

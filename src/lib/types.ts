@@ -35,13 +35,16 @@ export type Book = {
   sellerName: string;
   /** 卖家微信号 */
   sellerWechat: string;
+  /** 发布者设备 ID，"seed" 为示例数据 */
+  ownerId: string;
   /** 发布时间戳（ms） */
   createdAt: number;
   /** 是否已售出 */
   sold: boolean;
-  /** 是否由本机用户发布 */
-  mine: boolean;
 };
+
+/** 发布书籍的入参 */
+export type BookInput = Omit<Book, "id" | "createdAt" | "sold" | "ownerId">;
 
 export type Profile = {
   nickname: string;

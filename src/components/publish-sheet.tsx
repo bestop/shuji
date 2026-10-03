@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ImagePlus, Loader2, X } from "lucide-react";
+import { ImagePlus, Loader2, UserRoundPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   Drawer,
@@ -11,21 +11,21 @@ import {
 import { BookCover } from "./book-cover";
 import { compressImage } from "@/lib/image";
 import { CONDITIONS, CATEGORIES } from "@/lib/types";
-import type { Book, Condition, Profile } from "@/lib/types";
-import { useStore } from "@/lib/store";
+import type { BookInput, Condition, Profile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   profile: Profile;
+  onPublish: (input: BookInput) => Promise<boolean>;
+  onGoProfile: () => void;
 };
 
 const inputCls =
   "h-11 w-full rounded-xl border border-stone-200 bg-white px-3.5 text-[15px] text-stone-800 placeholder:text-stone-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20";
 
-export function PublishSheet({ open, onOpenChange, profile }: Props) {
-  const addBook = useStore((s) => s.addBook);
+export function PublishSheet({ open, onOpenChange, profile, onPublish, onGoProfile }: Props) {
 
   const [cover, setCover] = useState<string | undefined>(undefined);
   const [title, setTitle] = useState("");
@@ -78,7 +78,7 @@ export function PublishSheet({ open, onOpenChange, profile }: Props) {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const t = title.trim();
     const p = Number(price);
     const op = originalPrice.trim() ? Number(originalPrice) : undefined;
@@ -94,7 +94,7 @@ export function PublishSheet({ open, onOpenChange, profile }: Props) {
 
     setSubmitting(true);
     try {
-      addBook({
+      const ok = await onPublish({
         title: t,
         author: author.trim() || "佚名",
         category,
@@ -106,6 +106,7 @@ export function PublishSheet({ open, onOpenChange, profile }: Props) {
         sellerName: profile.nickname || "书友",
         sellerWechat: w,
       });
+      if (!ok) return; // 失败提示已由数据层展示，保留表单内容
       toast.success("发布成功 🎉", { description: `《${t}》已上架书集` });
       resetForm();
       onOpenChange(false);
@@ -135,6 +136,28 @@ export function PublishSheet({ open, onOpenChange, profile }: Props) {
 
           {/* 表单 */}
           <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 py-5">
+            {/* ① 资料完善引导 */}
+            {!profile.wechatId ? (
+              <div className="flex items-start gap-3 rounded-xl border border-amber-200/80 bg-amber-50 p-3.5">
+                <UserRoundPlus className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-semibold text-amber-800">
+                    建议先完善资料再发布
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-amber-700/90">
+                    在「我的」设置昵称与微信号后，发布会自动填入，买家也能准确找到你
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onGoProfile}
+                    className="mt-2 rounded-full bg-amber-600 px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-amber-700"
+                  >
+                    去完善（10 秒搞定）
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
             {/* 封面 */}
             <div>
               <label className="mb-2 block text-[13px] font-semibold text-stone-700">

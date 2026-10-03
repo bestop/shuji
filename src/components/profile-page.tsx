@@ -13,13 +13,23 @@ import { cn } from "@/lib/utils";
 type Props = {
   profile: Profile;
   books: Book[];
+  /** 当前设备 ID，用于筛出「我的发布」 */
+  myId: string;
   favoriteIds: string[];
   onOpenBook: (b: Book) => void;
+  onToggleSold: (id: string, nextSold: boolean) => void;
+  onRemoveBook: (id: string) => void;
 };
 
-export function ProfilePage({ profile, books, favoriteIds, onOpenBook }: Props) {
-  const toggleSold = useStore((s) => s.toggleSold);
-  const removeBook = useStore((s) => s.removeBook);
+export function ProfilePage({
+  profile,
+  books,
+  myId,
+  favoriteIds,
+  onOpenBook,
+  onToggleSold,
+  onRemoveBook,
+}: Props) {
   const updateProfile = useStore((s) => s.updateProfile);
 
   const [tab, setTab] = useState<"mine" | "fav">("mine");
@@ -27,7 +37,7 @@ export function ProfilePage({ profile, books, favoriteIds, onOpenBook }: Props) 
   const [nick, setNick] = useState(profile.nickname);
   const [wechat, setWechat] = useState(profile.wechatId);
 
-  const mine = books.filter((b) => b.mine);
+  const mine = books.filter((b) => b.ownerId === myId);
   const favs = favoriteIds
     .map((id) => books.find((b) => b.id === id))
     .filter((b): b is Book => Boolean(b));
@@ -224,7 +234,7 @@ export function ProfilePage({ profile, books, favoriteIds, onOpenBook }: Props) 
                   <button
                     type="button"
                     onClick={() => {
-                      toggleSold(b.id);
+                      onToggleSold(b.id, !b.sold);
                       toast.success(b.sold ? "已重新上架" : "已标记为售出");
                     }}
                     className={cn(
@@ -243,7 +253,7 @@ export function ProfilePage({ profile, books, favoriteIds, onOpenBook }: Props) 
                   <button
                     type="button"
                     onClick={() => {
-                      removeBook(b.id);
+                      onRemoveBook(b.id);
                       toast.success("已删除");
                     }}
                     className="flex h-7 items-center gap-1 rounded-full border border-stone-200 px-2.5 text-[11px] text-stone-400 transition-colors hover:border-destructive/40 hover:text-destructive"
