@@ -29,7 +29,11 @@ async function count(url: string, table: string): Promise<number> {
 }
 
 async function main() {
-  const testInNew = await count(env.SHUJI_DATABASE_URL, 'books WHERE title = \'__迁移测试书__\'');
+  const testTitle = process.argv[2] ?? "__测试书__";
+  const testInNew = await count(
+    env.SHUJI_DATABASE_URL,
+    `books WHERE title = '${testTitle.replace(/'/g, "''")}'`
+  );
   const totalNew = await count(env.SHUJI_DATABASE_URL, "books");
   const totalOld = await count(env.POSTGRES_PRISMA_URL, "shuji.books");
   console.log(`新库 neon-shuji: 总数=${totalNew}, 测试书存在=${testInNew === 1}`);

@@ -24,8 +24,10 @@ function loadEnvFile(path: string): Record<string, string> {
 
 const env = { ...loadEnvFile(".env"), ...loadEnvFile(".env.local") };
 const adminUrl =
-  env.POSTGRES_URL_NON_POOLING || env.DATABASE_URL_UNPOOLED;
-if (!adminUrl) throw new Error("未找到直连连接串（POSTGRES_URL_NON_POOLING）");
+  process.env.SHUJI_ADMIN_URL || // 显式指定目标实例（跨实例操作时使用）
+  env.POSTGRES_URL_NON_POOLING ||
+  env.DATABASE_URL_UNPOOLED;
+if (!adminUrl) throw new Error("未找到直连连接串（SHUJI_ADMIN_URL / POSTGRES_URL_NON_POOLING）");
 
 function mask(u: string) {
   return u.replace(/\/\/([^:/@]+):[^@/]+@/, "//$1:****@");
