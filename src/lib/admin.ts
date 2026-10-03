@@ -21,6 +21,13 @@ export function adminToken(passcode: string): string {
   return createHash("sha256").update(`${TOKEN_SALT}:${passcode}`).digest("hex");
 }
 
+/** 恒定时间字符串比较（先哈希定长再比较，防时序侧信道） */
+export function safeEqual(a: string, b: string): boolean {
+  const ha = createHash("sha256").update(a).digest();
+  const hb = createHash("sha256").update(b).digest();
+  return timingSafeEqual(ha, hb);
+}
+
 /** 当前请求是否为已登录管理员（口令未配置时恒为 false） */
 export async function isAdminRequest(): Promise<boolean> {
   const passcode = adminPasscode();

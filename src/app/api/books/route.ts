@@ -28,7 +28,12 @@ export async function GET(req: Request) {
       },
       orderBy: { createdAt: "desc" },
     });
-    return NextResponse.json({ enabled: true, db: getDbName(), books: rows.map(mapBook) });
+    return NextResponse.json({
+      enabled: true,
+      db: getDbName(),
+      review: isReviewEnabled(),
+      books: rows.map(mapBook),
+    });
   } catch (e) {
     console.error("[books:GET]", e);
     return NextResponse.json(

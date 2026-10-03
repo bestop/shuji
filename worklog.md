@@ -208,3 +208,20 @@ Work Log:
 Stage Summary:
 - 分享域名全面统一：唯一对外主域名 https://ys.hikid.vip（已备案），vercel.app 与旧 ys.hijoe.net 均 308 跳转
 - 线上品牌文案/分享卡/落地页全部易书化；生产验证与部署确认见后续记录
+
+---
+Task ID: 9
+Agent: Super Z (main agent)
+Task: 逻辑体检与优化 + 主页左上角品牌更正为「易书」
+
+Work Log:
+- 主页左上角漏改定位：书/集 被 <span> 拆分写法导致全局搜索未命中（书<span>集</span> → 易<span>书</span>）；mode 兜底文案「校园二手书市集」→「二手交易市集」
+- use-market.ts 加固：① HTTP 非 2xx 视为瞬断，不再用空 books 覆盖已有书单（修复数据库抖动导致市集整页清空）；② 首次探测失败延迟 3s 重试一次，仍失败才降级本地模式（修复网络抖动导致整个会话永久困在本地模式且不再重试）；③ server 模式下失败仅保留数据等待轮询恢复，绝不 server→local 降级（显式 enabled:false 除外）；④ visibilitychange 仅页面可见时刷新
+- 审核开关前后端打通：GET /api/books 新增 review 字段（isReviewEnabled）→ use-market 透出 reviewEnabled → PublishSheet reviewRequired=mode==="server"&&reviewEnabled（未配置口令时发布提示恢复为「发布成功」而非误报「已提交审核」）；乐观插入的临时书 status 亦随 reviewRef
+- admin.ts 新增 safeEqual（先 sha256 定长再 timingSafeEqual），管理员登录口令比较改为恒定时间（与 Cookie 校验一致）
+- 根 API /api 返回品牌信息；lint 0 错误 + next build 通过
+- 本地 dev 冒烟：GET /api/books → enabled:true, db:neon-shuji, review:true, 12 本；登录错误口令 401 / 正确口令 200；根 API 品牌响应正常
+
+Stage Summary:
+- 数据层三类边界场景（瞬断清空/永久降级/审核开关脱节）修复，管理登录时序安全补齐
+- 主页顶栏左上角「易书」更正完成

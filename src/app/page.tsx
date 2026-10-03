@@ -120,7 +120,7 @@ export default function Page() {
           <div className="flex items-center justify-between pb-3 pt-[max(0.875rem,env(safe-area-inset-top))]">
             <div className="flex items-baseline gap-2">
               <h1 className="font-serif-sc text-[26px] font-bold leading-none tracking-wide text-stone-900">
-                书<span className="text-primary">集</span>
+                易<span className="text-primary">书</span>
               </h1>
               <p className="text-[11px] tracking-[0.2em] text-stone-400">让好书流动起来</p>
             </div>
@@ -129,7 +129,7 @@ export default function Page() {
                 ? "云端市集 · 多端同步"
                 : market.mode === "local"
                   ? "本机体验模式"
-                  : "校园二手书市集"}
+                  : "二手交易市集"}
             </span>
           </div>
         </div>
@@ -302,7 +302,7 @@ export default function Page() {
         open={publishOpen}
         onOpenChange={setPublishOpen}
         profile={profile}
-        reviewRequired={market.mode === "server"}
+        reviewRequired={market.mode === "server" && market.reviewEnabled}
         onPublish={market.addBook}
         onGoProfile={() => {
           setPublishOpen(false);

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminPasscode, setAdminCookie } from "@/lib/admin";
+import { adminPasscode, safeEqual, setAdminCookie } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   }
   const body = (await req.json().catch(() => ({}))) as { passcode?: unknown };
   const input = typeof body.passcode === "string" ? body.passcode.trim() : "";
-  if (!input || input !== passcode) {
+  if (!input || !safeEqual(input, passcode)) {
     return NextResponse.json({ error: "口令不正确" }, { status: 401 });
   }
   const res = NextResponse.json({ ok: true });

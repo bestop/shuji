@@ -12,6 +12,8 @@ type UseMarketReturn = {
   mode: MarketMode;
   loading: boolean;
   books: Book[];
+  /** 服务端是否开启审核（未配置管理员口令时发布直接上架） */
+  reviewEnabled: boolean;
   refresh: () => Promise<void>;
   addBook: (input: BookInput) => Promise<boolean>;
   removeBook: (id: string) => Promise<boolean>;
@@ -32,26 +34,54 @@ export function useMarket(): UseMarketReturn {
   const [mode, setMode] = useState<MarketMode>("unknown");
   const [serverBooks, setServerBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviewEnabled, setReviewEnabled] = useState(true);
   const modeRef = useRef<MarketMode>("unknown");
   modeRef.current = mode;
+  const reviewRef = useRef(true);
+  reviewRef.current = reviewEnabled;
+  /** 首次探测失败后的重试标记（只重试一次，避免网络抖动误入本地模式） */
+  const retryingRef = useRef(false);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (): Promise<void> => {
     try {
       // 携带 ownerId：服务端返回「全部已上架 + 自己的待审/驳回书」
       const res = await fetch(
         `/api/books?owner=${encodeURIComponent(getDeviceId())}`,
         { cache: "no-store" }
       );
-      const data = (await res.json()) as { enabled?: boolean; books?: Book[] };
-      if (data?.enabled) {
+      const data = (await res.json().catch(() => null)) as {
+        enabled?: boolean;
+        books?: Book[];
+        review?: boolean;
+        error?: string;
+      } | null;
+      // HTTP 非 2xx 视为瞬断，与网络异常同路处理，不用空数据覆盖现有书单
+      if (!res.ok || !data) throw new Error(data?.error || "市集服务暂不可用");
+      retryingRef.current = false;
+      if (data.enabled) {
         setServerBooks(Array.isArray(data.books) ? data.books : []);
+        if (typeof data.review === "boolean") setReviewEnabled(data.review);
         if (modeRef.current !== "server") setMode("server");
       } else if (modeRef.current !== "local") {
         setMode("local");
       }
+      setLoading(false);
     } catch {
+      // 云端会话中遇到数据库瞬断：保留已加载书单，不降级，等下次轮询/聚焦恢复
+      if (modeRef.current === "server") {
+        setLoading(false);
+        return;
+      }
+      // 首次探测失败：延迟 3s 重试一次，仍失败才进入本地模式
+      if (!retryingRef.current) {
+        retryingRef.current = true;
+        window.setTimeout(() => {
+          void refresh();
+        }, 3000);
+        return; // 保持 loading 骨架屏
+      }
+      retryingRef.current = false;
       if (modeRef.current !== "local") setMode("local");
-    } finally {
       setLoading(false);
     }
   }, []);
@@ -64,7 +94,10 @@ export function useMarket(): UseMarketReturn {
       }
     }, 30000);
     const onFocus = () => {
-      if (modeRef.current === "server") void refresh();
+      // 仅页面可见时刷新（visibilitychange 在隐藏时也会触发，无需浪费请求）
+      if (modeRef.current === "server" && document.visibilityState === "visible") {
+        void refresh();
+      }
     };
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onFocus);
@@ -87,7 +120,7 @@ export function useMarket(): UseMarketReturn {
         id: `temp-${Date.now()}`,
         ownerId: myId,
         sold: false,
-        status: "PENDING",
+        status: reviewRef.current ? "PENDING" : "APPROVED",
         createdAt: Date.now(),
       };
       setServerBooks((prev) => [temp, ...prev]);
@@ -172,6 +205,7 @@ export function useMarket(): UseMarketReturn {
     mode,
     loading,
     books: mode === "server" ? serverBooks : localBooks,
+    reviewEnabled,
     refresh,
     addBook,
     removeBook,
