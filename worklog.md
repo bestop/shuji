@@ -225,3 +225,22 @@ Work Log:
 Stage Summary:
 - 数据层三类边界场景（瞬断清空/永久降级/审核开关脱节）修复，管理登录时序安全补齐
 - 主页顶栏左上角「易书」更正完成
+
+---
+Task ID: 10
+Agent: Super Z (main agent)
+Task: 修复「微信内点图书分享，转发出去的是首页链接」
+
+Work Log:
+- 根因确认：应用内书籍详情是首页上的 Drawer 弹层，打开书时 URL 完全不变；微信 WebView「···」原生转发固定取当前加载页 URL → 转发出去永远是首页。带独立标题/OG 卡的 /book/[id] 落地页虽在，但应用内分享流程从未真正跳转过去（仅复制文案+本地引导浮层）
+- detail-sheet.tsx：微信内点分享改为 copyText(文案+链接) 兜底 → window.location.href 整页跳转 /book/{id}?share=1；移除本地 ShareGuide；自己的已上架书（status=APPROVED）补分享入口（此前卖家无法分享自己的书）
+- 新增 landing-share-guide.tsx：落地页加载后 ?share=1 且微信 UA 时延迟 400ms 自动弹出「···」转发引导；好友视角（无参数）与非微信 UA 均不弹
+- book/[id]/page.tsx 挂载 LandingShareGuide
+- 验证脚本 scripts/verify-share-flow.mjs（Playwright 微信 UA）抓到首版漏写 share=1 参数判断的 bug → 修复后 7/7 通过：详情弹层有分享按钮 → 点分享整页跳 /book/seed-04?share=1 → 自动弹引导 → 标题《小王子》仅售 ¥12 · 易书 → 我知道了可关闭 → 好友视角不弹 → 非微信 UA 不弹
+- lint 0 错误 + build 通过；提交 a124532 → 2049ba4 推送部署 READY；生产 curl：落地页 200 + og:image 正常 + OG 卡 200 PNG
+- 注意：沙箱把全库文件 mode 改成 755（零内容变化），已 git config core.fileMode false 屏蔽，仅提交真实改动
+
+Stage Summary:
+- 微信分享闭环修正完成：应用内点分享 → 整页跳书籍落地页 → 「···」转发出去的卡片 = 本书链接 + 书名标题 + 书籍 OG 卡图；好友点开直达该书
+- 卖家现在也能分享自己的已上架书
+- 微信内无 JS-SDK 的前提下，卡片描述文字仍为默认抓取（需认证服务号才能自定义），链接/标题/缩略图均已正确
