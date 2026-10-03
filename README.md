@@ -20,9 +20,10 @@
 
 应用启动时探测 `/api/books`，自动选择运行模式：
 
-- **云端模式**（配置了 `POSTGRES_PRISMA_URL`）：书籍数据存 PostgreSQL
-  （Vercel + Neon），任何设备发布的内容全网可见；发布/售出/删除走 REST API，
+- **云端模式**（配置了 Neon 连接串）：书籍数据存独立数据库 **`neon-shuji`**
+  （PostgreSQL，与其他项目数据库级隔离），任何设备发布的内容全网可见；发布/售出/删除走 REST API，
   服务端校验所有者权限（`ownerId` = 设备 ID），乐观更新 + 失败回滚。
+  连接解析优先级：`SHUJI_DATABASE_URL` > 改写库名后的 `POSTGRES_PRISMA_URL`（Vercel 零配置适配），详见 `src/lib/db.ts`。
 - **本地模式**（未配置数据库）：自动降级为 `localStorage` 持久化（Zustand），
   零后端也能完整体验，适合 Fork 后一键部署。
 
@@ -31,7 +32,7 @@
 ## 🛠 技术栈
 
 - **Next.js 16**（App Router + TypeScript + Route Handlers）
-- **Prisma ORM** + **PostgreSQL**（Neon，多 schema 隔离 `shuji`）
+- **Prisma ORM** + **PostgreSQL**（Neon 独立数据库 `neon-shuji`，`public` schema）
 - **Tailwind CSS 4** + shadcn/ui（Drawer 交互基于 vaul）
 - **Zustand**（本地模式持久化 + 个人数据）
 - **Framer Motion** 微动效、**sonner** 轻提示
@@ -47,9 +48,13 @@ bun run dev      # http://localhost:3000
 bun run lint     # 代码检查
 
 # 数据库（可选，未配置则自动进入本地模式）
-# 在 .env 中配置 POSTGRES_PRISMA_URL 后：
-bunx prisma db push                          # 建表（需先 CREATE SCHEMA shuji）
-DATABASE_URL=<unpooled连接串> bun scripts/seed.ts   # 灌入示例数据
+# 在 .env.local 中配置 SHUJI_DATABASE_URL（池化）与 SHUJI_DIRECT_URL（直连）后：
+bunx prisma db push          # 建表（独立库直接用 public schema，无需建 schema）
+bun scripts/seed.ts          # 灌入示例数据
+
+# 历史迁移（neondb.shuji schema → 独立库，幂等可重跑）
+bun scripts/create-neon-shuji.ts     # 创建独立数据库
+bun scripts/migrate-to-neon-shuji.ts # 备份 JSON + 复制数据 + 校验
 ```
 
 ## ☁️ 部署
@@ -58,7 +63,8 @@ DATABASE_URL=<unpooled连接串> bun scripts/seed.ts   # 灌入示例数据
 
 1. Fork / 推送本仓库到 GitHub
 2. 在 [vercel.com/new](https://vercel.com/new) 导入仓库
-3. 创建 Vercel Postgres / Neon 存储并连接项目（环境变量自动注入）
+3. 创建 Neon 存储并连接项目（环境变量自动注入即可，应用会自动把库名适配为 `neon-shuji`；
+   也可手动配置 `SHUJI_DATABASE_URL` 指向任意 Neon 数据库）
 4. 直接 Deploy
 
 或使用 CLI：
@@ -66,7 +72,6 @@ DATABASE_URL=<unpooled连接串> bun scripts/seed.ts   # 灌入示例数据
 ```bash
 npm i -g vercel
 vercel link --project shuji-book-market
-vercel storage connect <你的neon存储> --yes
 vercel deploy --prod
 ```
 
@@ -74,8 +79,7 @@ vercel deploy --prod
 
 ```bash
 vercel env pull .env.local          # 拉取连接串
-CREATE SCHEMA IF NOT EXISTS shuji;  # prisma db execute 或任意 SQL 客户端
-bunx prisma db push                 # DATABASE_URL 使用 UNPOOLED 连接串
+bunx prisma db push                 # 使用 SHUJI_DIRECT_URL（直连）建表
 bun scripts/seed.ts
 ```
 
@@ -100,12 +104,14 @@ src/
     ├── store.ts            # Zustand 本地持久化（资料/收藏/本地模式书架）
     ├── device.ts           # 设备 ID（发布归属与管理鉴权）
     ├── book-server.ts      # 服务端校验与 DTO 映射
-    ├── db.ts               # Prisma 惰性单例（无数据库时零依赖）
+    ├── db.ts               # 连接解析（neon-shuji 库名适配）+ Prisma 惰性单例
     ├── seed.ts             # 示例书籍数据与工具函数
     ├── image.ts            # 封面压缩 / 剪贴板
     └── types.ts            # 领域模型
-prisma/schema.prisma        # Book 模型（shuji schema）
+prisma/schema.prisma        # Book 模型（独立库 public schema）
 scripts/seed.ts             # 幂等种子脚本
+scripts/create-neon-shuji.ts    # 创建独立数据库（幂等）
+scripts/migrate-to-neon-shuji.ts # 数据迁移（备份/复制/校验，幂等）
 ```
 
 ## License

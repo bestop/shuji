@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { hasDb, getDb } from "@/lib/db";
+import { hasDb, getDb, getDbName } from "@/lib/db";
 import { mapBook, validateBookPayload } from "@/lib/book-server";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,7 @@ export async function GET() {
   try {
     const db = getDb();
     const rows = await db.book.findMany({ orderBy: { createdAt: "desc" } });
-    return NextResponse.json({ enabled: true, books: rows.map(mapBook) });
+    return NextResponse.json({ enabled: true, db: getDbName(), books: rows.map(mapBook) });
   } catch (e) {
     console.error("[books:GET]", e);
     return NextResponse.json(

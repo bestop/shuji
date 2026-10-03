@@ -1,10 +1,32 @@
 /**
- * 向 Neon PostgreSQL 灌入示例书籍数据（幂等，可重复执行）。
- * 用法：DATABASE_URL=<连接串> bun scripts/seed.ts
+ * 向「书集」独立数据库 neon-shuji 灌入示例书籍数据（幂等，可重复执行）。
+ * 用法：bun scripts/seed.ts
+ * 连接串优先级：SHUJI_DATABASE_URL > 改写库名后的 POSTGRES_PRISMA_URL/DATABASE_URL
  */
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+function resolveUrl(): string | undefined {
+  const explicit = process.env.SHUJI_DATABASE_URL;
+  if (explicit) return explicit;
+  for (const fallback of [
+    process.env.POSTGRES_PRISMA_URL,
+    process.env.DATABASE_URL,
+  ]) {
+    if (!fallback || !fallback.startsWith("postgres")) continue;
+    try {
+      const u = new URL(fallback);
+      u.pathname = "/neon-shuji";
+      return u.toString();
+    } catch {
+      continue;
+    }
+  }
+  return undefined;
+}
+
+const url = resolveUrl();
+if (!url) throw new Error("未找到数据库连接串");
+const prisma = new PrismaClient({ datasources: { db: { url } } });
 
 const DAY = 86400000;
 const now = Date.now();

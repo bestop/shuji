@@ -3,30 +3,30 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("POSTGRES_PRISMA_URL")
-  schemas  = ["shuji"]
+  provider  = "postgresql"
+  url       = env("SHUJI_DATABASE_URL")
+  directUrl = env("SHUJI_DIRECT_URL")
 }
 
 /// 二手书商品（多端共享数据；用户资料与收藏仍存于各自设备本地）
+/// 数据存放于独立数据库 neon-shuji（与 neondb / ilist 项目完全隔离）
 model Book {
-  id           String   @id
-  title        String
-  author       String   @default("")
-  category     String
-  condition    String
-  price        Float
+  id            String   @id
+  title         String
+  author        String   @default("")
+  category      String
+  condition     String
+  price         Float
   originalPrice Float?
-  description  String   @default("")
-  cover        String?  @db.Text
-  sellerName   String
-  sellerWechat String
+  description   String   @default("")
+  cover         String?  @db.Text
+  sellerName    String
+  sellerWechat  String
   /// 发布者设备 ID（用于「我的发布」归属与管理鉴权）
-  ownerId      String
-  sold         Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  ownerId       String
+  sold          Boolean  @default(false)
+  createdAt     DateTime @default(now())
 
   @@index([createdAt])
   @@map("books")
-  @@schema("shuji")
 }
