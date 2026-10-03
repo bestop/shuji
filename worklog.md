@@ -36,3 +36,27 @@ Stage Summary:
 - Vercel 生产地址：https://shuji-book-market.vercel.app（公开可访问，微信内可直接打开）
 - 交付物为可运行的 Next.js 16 应用；数据存于设备浏览器 localStorage，适合班级/社团小圈子场景，README 已说明升级为真实后端的路径
 - 验证截图存于 /home/z/my-project/download/verify-01~12.png
+
+---
+Task ID: 2
+Agent: Super Z (main agent)
+Task: ① 发布前资料完善引导 ② 升级真实后端（PostgreSQL）实现多设备共享
+
+Work Log:
+- 探测 Vercel Storage：CLI/API 均无法新建 Postgres（legacy 引擎已退役、marketplace 创建通道未开放）
+- 方案：复用账号既有 Neon 存储 neon-ilist，`vercel storage connect` 挂载到 shuji-book-market（production/preview/development 自动注入全套 PG 环境变量）
+- `vercel env pull` 解密连接串到本地 .env.local（sensitive 变量仅此途径可读）
+- 发现沙箱启动器进程预设 DATABASE_URL=file:... 优先级高于 .env → 应用统一改用 POSTGRES_PRISMA_URL（Vercel 运行时同样存在；去除 channel_binding 参数提升 Prisma 兼容性）
+- Prisma：provider postgresql + multiSchema（shuji schema 隔离，不碰 ilist 数据）；CREATE SCHEMA + db push + 幂等种子脚本 scripts/seed.ts（12 本书，upsert）
+- API：GET/POST /api/books、PATCH/DELETE /api/books/[id]；服务端参数校验、所有者 ownerId 鉴权（403）、无数据库时返回 enabled:false 优雅降级；db.ts 惰性单例
+- 前端：use-market.ts 双模式数据层（乐观更新/失败回滚/聚焦+30s 刷新）；Book.mine → ownerId（localStorage v1→v2 migrate）；设备 ID device.ts；资料卡/发布表单接入回调
+- ①发布前引导：未设微信号时发布抽屉展示琥珀色横幅「去完善」→ 跳转我的页编辑 → 保存后发布自动填入
+- 修复：POST 缺 id（crypto.randomUUID）、handleSubmit 缺 async、detail-sheet 括号笔误
+- 安全事故规避：.env（含 Neon 凭据）被 git 跟踪，git rm --cached 停止跟踪后提交；核验暂存区与远程历史均无凭据
+- 测试：curl 全链路（POST/PATCH/DELETE/403/400）；浏览器双模式 E2E（发布《围城》→ 清空 localStorage 模拟新设备 → 仍见 13 本云端书 → 清理测试数据）
+- 部署：GitHub 推送 24a212e；Vercel 重新部署；生产 /api/books enabled:true（12 本）、生产写删链路验证通过、浏览器复测「云端市集 · 多端同步」
+
+Stage Summary:
+- 线上已运行云端模式：https://shuji-book-market.vercel.app（任何设备发布即全网可见）
+- 本地连接串仅存于沙箱 .env/.env.local（git 忽略且已解除跟踪）
+- 运维备忘：db push/migrate 用 DATABASE_URL_UNPOOLED（直连）；运行时查询用 POSTGRES_PRISMA_URL（池化）；Neon 实例与 ilist 项目共享（shuji schema 隔离）
