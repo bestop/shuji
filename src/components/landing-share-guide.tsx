@@ -15,7 +15,10 @@ export function LandingShareGuide() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    // 仅「应用内点分享跳转而来」的访客（?share=1 且微信内）自动弹出；
+    // 好友点开分享卡进来的普通访客不带该参数，绝不打扰
     if (!isWeChat()) return;
+    if (!/[?&]share=1/.test(window.location.search)) return;
     // 延迟一拍再弹出，避免 effect 内同步 setState（react-hooks 规则），
     // 也让用户先瞥见落地页内容、理解当前页面就是这本书
     const timer = window.setTimeout(() => setOpen(true), 400);
