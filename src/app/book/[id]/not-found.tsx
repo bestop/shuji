@@ -18,7 +18,7 @@ export default function BookNotFound() {
           href="/"
           className="mt-5 flex h-11 w-full items-center justify-center rounded-xl bg-primary text-sm font-semibold text-white transition-colors hover:bg-primary/90"
         >
-          返回书集市集
+          返回易书市集
         </Link>
       </div>
     </main>

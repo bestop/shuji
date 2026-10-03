@@ -1,6 +1,6 @@
 #!/bin/bash
-# 书集生产环境 · 管理员审核链路验证
-BASE="https://shuji-book-market.vercel.app"
+# 易书生产环境 · 管理员审核链路验证
+BASE="https://ys.hikid.vip"
 JAR="/tmp/shuji-prod-cookies.txt"
 rm -f "$JAR"
 json() { python3 -c "import json,sys; d=json.load(sys.stdin); $1"; }

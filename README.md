@@ -1,8 +1,10 @@
-# 书集 · 校园二手书交易市集 📚
+# 易书 · 二手交易市集 📚
 
-一个**简洁优雅**的二手书交易系统，专为**微信内打开**而设计：暖纸色底、衬线书名排版、双列卡片瀑布流，全屏适配移动端，也优雅支持桌面端浏览。
+一个**简洁优雅**的二手交易市集，专为**微信内打开**而设计：暖纸色底、衬线书名排版、双列卡片瀑布流，全屏适配移动端，也优雅支持桌面端浏览。
 
-**线上地址**：https://shuji-book-market.vercel.app
+**线上地址**：https://ys.hikid.vip（已备案域名）
+
+> 备用地址 https://shuji-book-market.vercel.app 会自动 308 跳转到主域名。
 
 ## ✨ 功能
 
@@ -12,6 +14,7 @@
 | 📇 卡片式浏览 | 双列书卡（移动端）、封面缺省时自动生成渐变素书封 |
 | 📕 书籍详情 | 底部抽屉呈现：价格/成色/分类/描述/卖家信息，一键复制微信号联系 |
 | ➕ 发布闲置 | 上传实拍图（自动压缩）或自动生成书封；发布前引导完善昵称/微信号 |
+| 🔗 微信分享 | 每本书独立落地页 `/book/[id]` + 动态分享卡片图，转发卡片有品牌图与书籍信息，好友点开直达该书 |
 | ❤️ 收藏 | 心动好书一键收藏（保存在本机） |
 | 👤 我的 | 资料编辑、我的发布（标记已售/重新上架/删除、审核进度徽标）、我的收藏 |
 | 🛡️ 管理员审核 | 口令登录管理面板：待审核/已上架/未通过三态流转，驳回可附原因；新发布书籍经审核后上架 |
@@ -98,13 +101,16 @@ src/
 ├── app/
 │   ├── api/books/          # REST API：列表/发布/售出/删除（所有者校验 + 市集审核过滤）
 │   ├── api/admin/          # 管理员：登录/会话/全量书单/审核操作（口令 + 签名 Cookie）
+│   ├── api/og/book/        # 每本书的动态分享卡片图（Satori 渲染，微信转发缩略图）
+│   ├── book/[id]/          # 书籍落地页（分享直达 + 独立标题/og:image，未上架返回 404）
 │   ├── layout.tsx          # 全局元信息 / 微信 viewport / Toaster
 │   ├── page.tsx            # 主页面（首页 + 我的，视图切换）
-│   └── globals.css         # 书集主题（暖纸/墨绿/赭石）+ 中文衬线字体
+│   └── globals.css         # 易书主题（暖纸/墨绿/赭石）+ 中文衬线字体
 ├── components/
 │   ├── book-card.tsx       # 书卡（双列网格）
 │   ├── book-cover.tsx      # 封面（图片 or 自动渐变素书封）
 │   ├── detail-sheet.tsx    # 详情抽屉（联系卖家/收藏/分享/管理/审核进度提示）
+│   ├── share-guide.tsx     # 微信内「···」转发引导浮层（微信外 navigator.share 兑底）
 │   ├── publish-sheet.tsx   # 发布抽屉（图片压缩 + 表单 + 资料引导）
 │   ├── admin-sheet.tsx     # 管理员审核面板（登录/三态流转/驳回原因）
 │   ├── profile-page.tsx    # 我的（资料/发布/收藏管理 + 审核徽标 + 管理员入口）
@@ -118,11 +124,13 @@ src/
     ├── db.ts               # 连接解析（仅认 SHUJI_*）+ Prisma 惰性单例
     ├── seed.ts             # 示例书籍数据与工具函数
     ├── image.ts            # 封面压缩 / 剪贴板
+    ├── share.ts            # 分享文案与落地链接（微信环境检测）
     └── types.ts            # 领域模型（含 BookStatus）
 prisma/schema.prisma        # Book 模型（status/reviewNote/reviewedAt）
 scripts/seed.ts             # 幂等种子脚本
 scripts/switch-status.ts    # 数据库健康巡检
 scripts/approve-existing.ts # 一次性：存量书放行为 APPROVED
+scripts/build-share-assets.mjs # 生成品牌分享图/图标（改名或换域名后重跑）
 ```
 
 ## License

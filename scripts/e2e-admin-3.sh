@@ -1,6 +1,6 @@
 #!/bin/bash
 set -a; source /home/z/my-project/.env.local; set +a
-# 书集管理员审核 E2E · 第三版（eval 精确点击 + API 通过/驳回/恢复全流程）
+# 易书管理员审核 E2E · 第三版（eval 精确点击 + API 通过/驳回/恢复全流程）
 cd /home/z/my-project
 DL=/home/z/my-project/download
 mkdir -p "$DL"

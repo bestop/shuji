@@ -15,6 +15,6 @@ export function isWeChat(): boolean {
 export function buildBookShare(book: Book) {
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const url = `${origin}/book/${book.id}`;
-  const text = `【书集】《${book.title}》仅售 ¥${formatPrice(book.price)}，快来看看`;
-  return { title: `书集 · ${book.title}`, text, url };
+  const text = `【易书】《${book.title}》仅售 ¥${formatPrice(book.price)}，快来看看`;
+  return { title: `易书 · ${book.title}`, text, url };
 }

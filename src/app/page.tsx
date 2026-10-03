@@ -243,7 +243,7 @@ export default function Page() {
                 {/* 页脚 */}
                 <footer className="pb-32 pt-2 text-center sm:pb-28">
                   <p className="font-serif-sc text-xs tracking-[0.25em] text-stone-300">
-                    书集 · 二手书交易
+                    易书 · 二手交易市集
                   </p>
                   <p className="mt-1 text-[10px] text-stone-300">
                     {market.mode === "server"

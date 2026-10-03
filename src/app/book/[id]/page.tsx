@@ -23,12 +23,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const b = await fetchBook(id);
   if (!b || b.status !== "APPROVED") {
-    return { title: "书没找到 · 书集", robots: { index: false } };
+    return { title: "书没找到 · 易书", robots: { index: false } };
   }
-  const title = `《${b.title}》仅售 ¥${formatPrice(b.price)} · 书集`;
+  const title = `《${b.title}》仅售 ¥${formatPrice(b.price)} · 易书`;
   const desc = `${b.author} 著 · ${b.condition}${
     b.description ? ` · ${b.description.slice(0, 60)}` : ""
-  }。上书集联系书友，让好书流动起来。`;
+  }。上易书联系书友，让好书流动起来。`;
   const og = `/api/og/book/${b.id}`;
   return {
     title,
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description: desc,
       url: `/book/${b.id}`,
-      siteName: "书集",
+      siteName: "易书",
       type: "website",
       images: [{ url: og, width: 1200, height: 630, alt: `《${b.title}》` }],
     },
@@ -61,10 +61,10 @@ export default async function BookLanding({ params }: Props) {
         {/* 品牌行 */}
         <Link href="/" className="inline-flex items-baseline gap-2 pt-2">
           <span className="font-serif-sc text-[22px] font-bold leading-none tracking-wide text-stone-900">
-            书<span className="text-primary">集</span>
+            易<span className="text-primary">书</span>
           </span>
           <span className="text-[10px] tracking-[0.2em] text-stone-400">
-            校园二手书交易市集
+            二手交易市集
           </span>
         </Link>
 
@@ -139,13 +139,13 @@ export default async function BookLanding({ params }: Props) {
             className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-[15px] font-semibold text-white shadow-sm transition-all hover:bg-primary/90 active:scale-[0.98]"
           >
             <BookOpen className="h-4 w-4" aria-hidden />
-            打开书集，联系书友
+            打开易书，联系书友
             <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
           <p className="mt-3 text-center text-xs leading-relaxed text-stone-400">
             微信内可点击右上角「···」把这本书转发给朋友
             <br />
-            交易请当面验书 · 书集 ys.hijoe.net
+            交易请当面验书 · 易书 ys.hikid.vip
           </p>
         </div>
       </div>

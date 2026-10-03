@@ -41,7 +41,7 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* 「书集」主题：暖纸底色 + 墨绿主色 + 赭石价格色 */
+/* 「易书」主题：暖纸底色 + 墨绿主色 + 赭石价格色 */
 :root {
   --radius: 0.75rem;
   --background: #f7f5f1;

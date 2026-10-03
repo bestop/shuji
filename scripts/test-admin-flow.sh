@@ -1,6 +1,6 @@
 #!/bin/bash
 set -a; source /home/z/my-project/.env.local; set +a
-# 书集管理员审核全链路 API 测试（本地 dev server）
+# 易书管理员审核全链路 API 测试（本地 dev server）
 set -e
 BASE="http://localhost:3000"
 JAR="/tmp/shuji-admin-cookies.txt"

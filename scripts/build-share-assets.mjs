@@ -51,14 +51,14 @@ const defs = GRADIENTS.map(
 const ogDefault = `<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
 <defs>${defs}</defs>
 <rect width="1200" height="630" fill="#F7F5F1"/>
-<text x="880" y="560" font-family="Noto Serif SC" font-weight="900" font-size="560" fill="#EBE6DC">书</text>
+<text x="880" y="560" font-family="Noto Serif SC" font-weight="900" font-size="560" fill="#EBE6DC">易</text>
 <g>
-  <text x="72" y="218" font-family="Noto Serif SC" font-weight="900" font-size="150" fill="#292524">书<tspan fill="#166E4E">集</tspan></text>
-  <text x="76" y="278" font-family="Noto Sans SC" font-weight="500" font-size="30" letter-spacing="14" fill="#847F77">校园二手书交易市集</text>
+  <text x="72" y="218" font-family="Noto Serif SC" font-weight="900" font-size="150" fill="#292524">易<tspan fill="#166E4E">书</tspan></text>
+  <text x="76" y="278" font-family="Noto Sans SC" font-weight="500" font-size="30" letter-spacing="14" fill="#847F77">二手交易市集</text>
 </g>
 <text x="76" y="382" font-family="Noto Serif SC" font-weight="600" font-size="46" fill="#57534E">发布闲置好书，让好书流动起来。</text>
 ${spines(76, 560)}
-<text x="1124" y="588" text-anchor="end" font-family="Noto Sans SC" font-weight="500" font-size="26" fill="#A8A29E">ys.hijoe.net</text>
+<text x="1124" y="588" text-anchor="end" font-family="Noto Sans SC" font-weight="500" font-size="26" fill="#A8A29E">ys.hikid.vip</text>
 </svg>`;
 
 /* ---------- 2. og-square.png 600×600 ---------- */
@@ -67,7 +67,7 @@ const ogSquare = `<svg width="600" height="600" viewBox="0 0 600 600" xmlns="htt
 <rect width="600" height="600" fill="#166E4E"/>
 <rect x="26" y="26" width="548" height="548" rx="10" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="2"/>
 ${spines(60, 470, 0.72)}
-<text x="300" y="230" text-anchor="middle" font-family="Noto Serif SC" font-weight="900" font-size="150" fill="#F7FDF9">书集</text>
+<text x="300" y="230" text-anchor="middle" font-family="Noto Serif SC" font-weight="900" font-size="150" fill="#F7FDF9">易书</text>
 <text x="300" y="290" text-anchor="middle" font-family="Noto Sans SC" font-weight="400" font-size="28" letter-spacing="10" fill="rgba(255,255,255,.78)">让好书流动起来</text>
 </svg>`;
 

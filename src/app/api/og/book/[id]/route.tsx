@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * 每本书的分享卡片图（1200×630）：
- * 渐变书封底 + 书名/作者/价格 + 书集品牌。
+ * 渐变书封底 + 书名/作者/价格 + 易书品牌。
  * 微信转发卡片与 og:image 均指向本路由。
  */
 
@@ -66,10 +66,10 @@ export async function GET(req: Request, { params }: Params) {
 
   const font = await loadFont(req);
   const [c1, c2] = gradientFor(id);
-  const title = ok ? clampTitle(book!.title, 18) : "书集";
+  const title = ok ? clampTitle(book!.title, 18) : "易书";
   const author = ok
     ? `${book!.author} 著 · ${book!.category}`
-    : "校园二手书交易市集";
+    : "二手交易市集";
 
   const el = (
     <div
@@ -102,7 +102,7 @@ export async function GET(req: Request, { params }: Params) {
       {/* 顶栏品牌 */}
       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
         <span style={{ fontSize: 44, fontWeight: 600, letterSpacing: 4 }}>
-          书集
+          易书
         </span>
         <span
           style={{
@@ -111,7 +111,7 @@ export async function GET(req: Request, { params }: Params) {
             color: "rgba(255,255,255,0.72)",
           }}
         >
-          校园二手书交易市集
+          二手交易市集
         </span>
       </div>
 
@@ -161,7 +161,7 @@ export async function GET(req: Request, { params }: Params) {
             color: "rgba(255,255,255,0.72)",
           }}
         >
-          书集 · 让好书流动起来
+          易书 · 让好书流动起来
         </span>
       </div>
     </div>

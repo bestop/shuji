@@ -114,7 +114,7 @@ export function PublishSheet({ open, onOpenChange, profile, reviewRequired, onPu
         {
           description: reviewRequired
             ? `《${t}》审核通过后将上架展示，可在「我的发布」查看进度`
-            : `《${t}》已上架书集`,
+            : `《${t}》已上架易书`,
         }
       );
       resetForm();

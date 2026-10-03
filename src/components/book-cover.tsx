@@ -67,7 +67,7 @@ export function BookCover({ bookId, title, author, cover, className, size = "sm"
         </p>
       ) : null}
       <span className="absolute bottom-2 right-2.5 font-serif-sc text-[9px] tracking-[0.3em] text-white/50">
-        书集
+        易书
       </span>
     </div>
   );

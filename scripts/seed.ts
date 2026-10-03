@@ -1,5 +1,5 @@
 /**
- * 向「书集」独立数据库 neon-shuji 灌入示例书籍数据（幂等，可重复执行）。
+ * 向「易书」独立数据库 neon-shuji 灌入示例书籍数据（幂等，可重复执行）。
  * 用法：bun scripts/seed.ts
  * 连接串：读取 SHUJI_DATABASE_URL（.env.local 或环境变量）
  */

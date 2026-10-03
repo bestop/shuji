@@ -1,6 +1,6 @@
 #!/bin/bash
 set -a; source /home/z/my-project/.env.local; set +a
-# 书集管理员审核 E2E · 下架/驳回/恢复 聚焦验证（无数据残留）
+# 易书管理员审核 E2E · 下架/驳回/恢复 聚焦验证（无数据残留）
 cd /home/z/my-project
 DL=/home/z/my-project/download
 click_incl() { agent-browser eval "(() => { const b = [...document.querySelectorAll('button')].find(x => x.textContent.includes('$1')); if (b) { b.click(); return 'clicked:'+b.textContent.trim().slice(0,12); } return 'not-found'; })()" | tail -1; }

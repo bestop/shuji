@@ -1,5 +1,5 @@
 /**
- * 书集数据库健康巡检（独立实例 frosty-rice / neon-shuji）：
+ * 易书数据库健康巡检（独立实例 frosty-rice / neon-shuji）：
  *   1. SHUJI_DATABASE_URL 连通性 + 当前库名
  *   2. 书籍总量 / 已售 / 审核状态分布
  * 用法：bun scripts/switch-status.ts
