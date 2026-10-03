@@ -192,3 +192,19 @@ Stage Summary:
 - 微信分享闭环上线：转发卡片有品牌图与书籍信息、好友点开直达该书详情、微信内一键引导转发
 - 分享统一域名 ys.hijoe.net（vercel.app 308 自动跳转）
 - 遗留提示：微信卡片「描述文字」与缩略图的自定义程度依赖公众号 JS-SDK（需备案域名+认证公众号），当前为无 SDK 最优解；若 ys.hijoe.net 在微信内出现「非微信官方网页」拦截页属腾讯安全策略，点继续访问即可，无代码解法
+
+---
+Task ID: 8
+Agent: Super Z (main agent)
+Task: 品牌更名「易书 · 二手交易市集」+ 分享域名统一至备案域名 ys.hikid.vip + README 同步
+
+Work Log:
+- 域名现状核查：用户已在 Vercel 后台完成大半——项目改名 shuji、ys.hikid.vip 已绑定 verified（DNS CNAME 已指向 Vercel 边缘）、shuji-book-market.vercel.app 已 308 → ys.hikid.vip；补齐两处遗漏：ys.hijoe.net PATCH 308 → ys.hikid.vip；shuji.vercel.app 属全球其他账号（Hugo 博客），与本项目无关无需处理
+- 品牌更名 21 文件：layout 元信息（title/description/keywords/OG/Twitter + metadataBase 兜底域名）、首页页脚、书籍落地页（品牌行/行动区/页脚域名）、not-found、share.ts 文案、book-cover 角标、publish-sheet toast、OG 动态卡（品牌/兜底文案/口号）、build-share-assets.mjs SVG 模板
+- 介绍统一为「二手交易市集」（去除「校园」前缀）；注释类（globals.css/scripts/.env.local）sed 批量同步；rg 全库零残留（worklog 除外）
+- 重新生成 public/og-default.png（1200×630 品牌卡 · 易书 + ys.hikid.vip）与 og-square.png（600×600 方卡），目检通过；README 重写（品牌/介绍/线上地址=ys.hikid.vip/备用地址跳转说明/补充分享落地页与脚本文档）
+- lint 0 错误 + next build 生产构建通过；提交 e2d214c 推送 GitHub（PAT 一次性凭据，remote 无残留）触发自动部署
+
+Stage Summary:
+- 分享域名全面统一：唯一对外主域名 https://ys.hikid.vip（已备案），vercel.app 与旧 ys.hijoe.net 均 308 跳转
+- 线上品牌文案/分享卡/落地页全部易书化；生产验证与部署确认见后续记录
