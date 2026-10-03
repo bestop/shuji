@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BookOpen, Search, SlidersHorizontal } from "lucide-react";
 import { BookCard } from "@/components/book-card";
@@ -69,6 +69,27 @@ export default function Page() {
   }, [books, query, cat, sort]);
 
   const activeBook = books.find((b) => b.id === activeId) ?? null;
+
+  // 从分享落地页 /book/[id] 跳回时，自动弹出对应书详情
+  const autoOpenedRef = useRef(false);
+  useEffect(() => {
+    if (loading || autoOpenedRef.current) return;
+    autoOpenedRef.current = true;
+    const m = /[?&]book=([^&]+)/.exec(window.location.search);
+    if (!m) return;
+    const id = decodeURIComponent(m[1]);
+    if (!books.some((b) => b.id === id)) {
+      window.history.replaceState(null, "", window.location.pathname);
+      return;
+    }
+    // URL → 界面状态同步延迟一个宏任务，避免 effect 内联级联渲染
+    window.setTimeout(() => {
+      setActiveId(id);
+      setDetailOpen(true);
+      setView("home");
+    }, 0);
+    window.history.replaceState(null, "", window.location.pathname);
+  }, [loading, books]);
 
   const openBook = (b: Book) => {
     setActiveId(b.id);

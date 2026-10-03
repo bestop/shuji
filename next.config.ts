@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
+  // OG 卡片路由需在函数内读取中文字体文件
+  outputFileTracingIncludes: {
+    "/api/og/**": ["./public/fonts/**"],
+  },
 };
 
 export default nextConfig;

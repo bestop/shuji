@@ -20,8 +20,10 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { BookCover } from "./book-cover";
+import { ShareGuide } from "./share-guide";
 import { formatPrice, timeAgo } from "@/lib/seed";
 import { copyText } from "@/lib/image";
+import { buildBookShare, isWeChat } from "@/lib/share";
 import type { Book } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +50,7 @@ export function DetailSheet({
   onDelete,
 }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   if (!book) return null;
 
@@ -63,18 +66,27 @@ export function DetailSheet({
   };
 
   const handleShare = async () => {
-    const text = `【书集】《${book.title}》仅售 ¥${formatPrice(book.price)}，点击查看`;
-    const url = window.location.href;
+    const { title, text, url } = buildBookShare(book);
+
+    // 微信内不支持 Web Share API：复制文案 + 引导右上角原生转发
+    if (isWeChat()) {
+      await copyText(`${text} ${url}`);
+      setGuideOpen(true);
+      return;
+    }
+
     if (navigator.share) {
       try {
-        await navigator.share({ title: `书集 · ${book.title}`, text, url });
+        await navigator.share({ title, text, url });
         return;
-      } catch {
-        /* 用户取消分享，忽略 */
+      } catch (e) {
+        if ((e as Error)?.name === "AbortError") return; // 用户取消
       }
     }
     const ok = await copyText(`${text} ${url}`);
-    toast[ok ? "success" : "error"](ok ? "分享内容已复制" : "分享失败");
+    toast[ok ? "success" : "error"](
+      ok ? "分享内容已复制，去粘贴给好友吧" : "分享失败"
+    );
   };
 
   return (
@@ -304,6 +316,7 @@ export function DetailSheet({
           </div>
         </div>
       </DrawerContent>
+      <ShareGuide open={guideOpen} onClose={() => setGuideOpen(false)} />
     </Drawer>
   );
 }
