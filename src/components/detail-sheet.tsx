@@ -20,7 +20,6 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { BookCover } from "./book-cover";
-import { ShareGuide } from "./share-guide";
 import { formatPrice, timeAgo } from "@/lib/seed";
 import { copyText } from "@/lib/image";
 import { buildBookShare, isWeChat } from "@/lib/share";
@@ -50,7 +49,6 @@ export function DetailSheet({
   onDelete,
 }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [guideOpen, setGuideOpen] = useState(false);
 
   if (!book) return null;
 
@@ -68,10 +66,13 @@ export function DetailSheet({
   const handleShare = async () => {
     const { title, text, url } = buildBookShare(book);
 
-    // 微信内不支持 Web Share API：复制文案 + 引导右上角原生转发
+    // 微信 WebView 的「···」原生转发固定取当前加载页的 URL：
+    // 详情只是首页上的弹层、URL 不变，直接引导转发出去的永远是首页链接。
+    // 因此先复制文案兜底，再整页跳到带独立标题/分享卡的落地页，
+    // 落地页会自动弹出转发引导，此时「···」转发出去的才是本书链接。
     if (isWeChat()) {
       await copyText(`${text} ${url}`);
-      setGuideOpen(true);
+      window.location.href = `${url}?share=1`;
       return;
     }
 
@@ -226,6 +227,16 @@ export function DetailSheet({
           <div className="sticky bottom-0 flex items-center gap-2.5 border-t border-stone-100 bg-white/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur">
             {isMine ? (
               <>
+                {book.status === "APPROVED" ? (
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    className="flex h-11 w-12 shrink-0 items-center justify-center rounded-xl border border-stone-200 text-stone-500 transition-colors hover:bg-stone-50"
+                    aria-label="分享这本书"
+                  >
+                    <Share2 className="h-5 w-5" />
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   onClick={() => onToggleSold(book.id, !book.sold)}
@@ -316,7 +327,6 @@ export function DetailSheet({
           </div>
         </div>
       </DrawerContent>
-      <ShareGuide open={guideOpen} onClose={() => setGuideOpen(false)} />
     </Drawer>
   );
 }

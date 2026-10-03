@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowRight, BookOpen, Clock3, Layers, Tag } from "lucide-react";
 import { hasDb, getDb } from "@/lib/db";
 import { formatPrice, timeAgo } from "@/lib/seed";
+import { LandingShareGuide } from "@/components/landing-share-guide";
 
 export const dynamic = "force-dynamic";
 
@@ -149,6 +150,8 @@ export default async function BookLanding({ params }: Props) {
           </p>
         </div>
       </div>
+      {/* 应用内分享跳转而来时，自动弹出「···」转发引导 */}
+      <LandingShareGuide />
     </main>
   );
 }
