@@ -82,3 +82,26 @@ Stage Summary:
 - 新库 neon-shuji 已建成并承载全部 12 本书，本地端到端验证通过
 - 新代码上线后生产自动切换到新库（零 Vercel 环境变量变更）；旧库 shuji schema 暂保留以维持线上服务连续性，待生产验证后执行 DROP SCHEMA shuji CASCADE 完成彻底迁移
 - 待用户提供新 token：GitHub PAT（推送 7b5b57f）+ Vercel token（生产部署）；旧 token 建议作废
+
+---
+Task ID: 3-b
+Agent: Super Z (main agent)
+Task: 接入用户自建 Neon 独立实例 frosty-rice-33455570，完成完全独立化
+
+Work Log:
+- 用户在 Neon 控制台创建独立实例 frosty-rice-33455570（ep-delicate-king-b3b2kymr，c-4.ap-southeast-1）并提供全套连接串
+- 上一轮部署已先行生效：生产曾运行于共享实例的同名独立数据库（中间态）；本轮升级为全新实例
+- create-neon-shuji.ts 增加 SHUJI_ADMIN_URL 覆盖 → 在新实例创建 neon-shuji 库
+- .env.local 的 SHUJI_DATABASE_URL/SHUJI_DIRECT_URL 切换到新实例（channel_binding 已剥除）
+- prisma db push 建表（新实例 neon-shuji.public）；migrate-to-neon-shuji.ts 跨实例迁移 12 本书，行数校验一致
+- 本地读写链路验证：POST 落新实例（13 本）→ verify-db-split.ts（测试书名参数化修复）→ DELETE 回到 12 本
+- Vercel 环境变量 SHUJI_DATABASE_URL/SHUJI_DIRECT_URL 注入 production/preview/development；--prod 重新部署
+- 双实例对照验证（check-both-instances.ts）：生产 POST 的验证书仅存在于 frosty-rice，sweet-fire 无痕 → 切换实锤
+- 最终增量同步（新增 0）后执行 drop-old-shuji.ts：旧实例 DROP SCHEMA shuji CASCADE + DROP DATABASE neon-shuji，还原为 ilist 专属（剩余 schema 仅 information_schema/public）
+- 生产终态：enabled=true, db=neon-shuji, 12 本书；浏览器实测 12 张书卡正常渲染、无页面错误（verify-20-frosty-rice.png）
+- 提交新脚本（check-both-instances / drop-old-shuji / create 脚本增强 / verify 脚本参数化）并推送 GitHub
+
+Stage Summary:
+- 书集现已运行于完全独立的 Neon 实例 frosty-rice-33455570（独立算力/存储/凭据）
+- 旧共享实例已 100% 还原，shuji 数据零残留（迁移备份: download/shuji-books-backup-2026-10-03.json）
+- 安全提醒：本会话粘贴过的 GitHub PAT / Vercel token / Neon 密码均建议轮换
