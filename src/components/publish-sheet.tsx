@@ -18,6 +18,8 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   profile: Profile;
+  /** 云端模式且开启审核时，发布后进入待审核队列 */
+  reviewRequired: boolean;
   onPublish: (input: BookInput) => Promise<boolean>;
   onGoProfile: () => void;
 };
@@ -25,7 +27,7 @@ type Props = {
 const inputCls =
   "h-11 w-full rounded-xl border border-stone-200 bg-white px-3.5 text-[15px] text-stone-800 placeholder:text-stone-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20";
 
-export function PublishSheet({ open, onOpenChange, profile, onPublish, onGoProfile }: Props) {
+export function PublishSheet({ open, onOpenChange, profile, reviewRequired, onPublish, onGoProfile }: Props) {
 
   const [cover, setCover] = useState<string | undefined>(undefined);
   const [title, setTitle] = useState("");
@@ -107,7 +109,14 @@ export function PublishSheet({ open, onOpenChange, profile, onPublish, onGoProfi
         sellerWechat: w,
       });
       if (!ok) return; // 失败提示已由数据层展示，保留表单内容
-      toast.success("发布成功 🎉", { description: `《${t}》已上架书集` });
+      toast.success(
+        reviewRequired ? "已提交审核 🎉" : "发布成功 🎉",
+        {
+          description: reviewRequired
+            ? `《${t}》审核通过后将上架展示，可在「我的发布」查看进度`
+            : `《${t}》已上架书集`,
+        }
+      );
       resetForm();
       onOpenChange(false);
     } finally {

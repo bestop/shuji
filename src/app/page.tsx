@@ -7,6 +7,7 @@ import { BookCard } from "@/components/book-card";
 import { DetailSheet } from "@/components/detail-sheet";
 import { PublishSheet } from "@/components/publish-sheet";
 import { ProfilePage } from "@/components/profile-page";
+import { AdminSheet } from "@/components/admin-sheet";
 import { BottomNav } from "@/components/bottom-nav";
 import { useStore } from "@/lib/store";
 import { useMarket } from "@/lib/use-market";
@@ -38,6 +39,7 @@ export default function Page() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
 
   // 水合检测：避免 SSR 与 localStorage 持久化状态的不一致
   const mounted = useSyncExternalStore(
@@ -49,6 +51,8 @@ export default function Page() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     let list = books.filter((b) => {
+      // 市集只展示审核已上架的书（待审/驳回书仅出现在「我的发布」）
+      if (b.status !== "APPROVED") return false;
       const hitCat = cat === "全部" || b.category === cat;
       if (!hitCat) return false;
       if (!q) return true;
@@ -241,6 +245,8 @@ export default function Page() {
                 books={books}
                 myId={mounted ? getDeviceId() : "server"}
                 favoriteIds={favoriteIds}
+                showAdmin={market.mode === "server"}
+                onOpenAdmin={() => setAdminOpen(true)}
                 onOpenBook={openBook}
                 onToggleSold={(id, nextSold) => void market.toggleSold(id, nextSold)}
                 onRemoveBook={(id) => void market.removeBook(id)}
@@ -275,11 +281,18 @@ export default function Page() {
         open={publishOpen}
         onOpenChange={setPublishOpen}
         profile={profile}
+        reviewRequired={market.mode === "server"}
         onPublish={market.addBook}
         onGoProfile={() => {
           setPublishOpen(false);
           setView("profile");
         }}
+      />
+
+      <AdminSheet
+        open={adminOpen}
+        onOpenChange={setAdminOpen}
+        onChanged={() => void market.refresh()}
       />
     </div>
   );

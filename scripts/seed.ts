@@ -1,31 +1,27 @@
 /**
  * 向「书集」独立数据库 neon-shuji 灌入示例书籍数据（幂等，可重复执行）。
  * 用法：bun scripts/seed.ts
- * 连接串优先级：SHUJI_DATABASE_URL > 改写库名后的 POSTGRES_PRISMA_URL/DATABASE_URL
+ * 连接串：读取 SHUJI_DATABASE_URL（.env.local 或环境变量）
  */
 import { PrismaClient } from "@prisma/client";
+import { readFileSync } from "node:fs";
 
-function resolveUrl(): string | undefined {
-  const explicit = process.env.SHUJI_DATABASE_URL;
-  if (explicit) return explicit;
-  for (const fallback of [
-    process.env.POSTGRES_PRISMA_URL,
-    process.env.DATABASE_URL,
-  ]) {
-    if (!fallback || !fallback.startsWith("postgres")) continue;
-    try {
-      const u = new URL(fallback);
-      u.pathname = "/neon-shuji";
-      return u.toString();
-    } catch {
-      continue;
+function loadEnvFile(path: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  try {
+    for (const line of readFileSync(path, "utf8").split("\n")) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*"?([^"]*)"?\s*$/);
+      if (m) out[m[1]] = m[2];
     }
+  } catch {
+    /* 文件不存在则忽略 */
   }
-  return undefined;
+  return out;
 }
 
-const url = resolveUrl();
-if (!url) throw new Error("未找到数据库连接串");
+const merged = { ...loadEnvFile(".env.local"), ...process.env } as Record<string, string>;
+const url = merged.SHUJI_DATABASE_URL;
+if (!url || !url.startsWith("postgres")) throw new Error("未找到 SHUJI_DATABASE_URL");
 const prisma = new PrismaClient({ datasources: { db: { url } } });
 
 const DAY = 86400000;
@@ -212,6 +208,7 @@ async function main() {
       create: {
         ...data,
         sold: Boolean(sold),
+        status: "APPROVED",
         ownerId: "seed",
       },
     });

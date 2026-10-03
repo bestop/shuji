@@ -121,3 +121,39 @@ Work Log:
 Stage Summary:
 - Vercel → Neon(frosty-rice) 连接健康：读写均正常，唯一承重变量为 SHUJI_*（旧实例库已删，勿删该变量，否则回退链会指向不存在的库）
 - 发现 git 自动部署通道可用，后续部署优先 git push
+
+---
+Task ID: 5
+Agent: Super Z (main agent)
+Task: 断开旧存储挂载（Vercel 旧 Neon 存储解除挂载 + 连接层精简）
+
+Work Log:
+- 确认挂载现状：shuji-book-market 项目挂有 Vercel 存储「neon-shuji」（store_TRnFvdEA4MrGJbT1），注入 17 个变量且 DATABASE_URL/POSTGRES_* 仍指向旧实例 sweet-fire（ep-sweet-fire-aomsu57e/neondb）
+- CLI disconnect 需交互确认，改走 REST API：DELETE /v1/storage/stores/{id}/connections/spc_OaXrHsQBA12lcv20 → HTTP 201 断开成功
+- 复核：storage status 显示 "No storage resources are connected"；SHUJI_DATABASE_URL/SHUJI_DIRECT_URL 三环境完好（曾因 env ls --environment 输出格式误判丢失，全量列表确认无恙）；生产 API 200
+- .env.local 重写：删除全部旧实例变量（DATABASE_URL/POSTGRES_*/PG*/NEON_*/VITE_NEON_AUTH_URL/VERCEL_OIDC_TOKEN），仅保留 SHUJI_*，新增 SHUJI_ADMIN_PASSCODE
+- src/lib/db.ts 精简：移除 rewriteDbName/回退链（POSTGRES_PRISMA_URL/DATABASE_URL），只认 SHUJI_DATABASE_URL；getDbName/hasDb/惰性单例保留
+- 删除迁移期脚本：create-neon-shuji.ts / migrate-to-neon-shuji.ts / check-both-instances.ts / drop-old-shuji.ts / verify-db-split.ts
+- switch-status.ts 重写为纯健康巡检（连通性 + 库名 + 书量/已售/审核分布）；seed.ts 移除改写逻辑、create 数据显式 status=APPROVED
+
+Stage Summary:
+- 旧存储挂载彻底解除，注入变量清零；应用与 Vercel 只依赖显式 SHUJI_*（指向 frosty-rice 实例）
+- 迁移期产物全部出清，巡检脚本面向新架构；Task 4 的「回退链」警示随之失效（回退链已删）
+
+---
+Task ID: 6
+Agent: Super Z (main agent)
+Task: 新功能「管理员审核」：新发布书籍审核通过后上架，口令登录管理面板
+
+Work Log:
+- Schema：Book 增加 status(PENDING/APPROVED/REJECTED, 默认 PENDING)/reviewNote/reviewedAt + @@index([status])；db push 至 neon-shuji（注意 Prisma CLI 只读 .env，需 source .env.local 注入）；scripts/approve-existing.ts 一次性放行存量 12 本（PENDING=12 → APPROVED=12）
+- API：GET /api/books 支持 ?owner=deviceId（返回已上架 + 自己的待审/驳回，他人未上架书不下发）；POST 依 SHUJI_ADMIN_PASSCODE 决定 PENDING/APPROVED（管理员发布直通）；新增 /api/admin/session|login|logout|books(PATCH [id])，鉴权 src/lib/admin.ts（sha256 签名 httpOnly Cookie 7 天 + timingSafeEqual，口令未配置=功能关闭）
+- 前端：admin-sheet.tsx 审核面板（登录/三态 tab/通过/驳回附原因/下架/恢复上架/刷新/退出）；profile-page 增加管理员入口与我的发布审核徽标（待审核/未通过+原因 tooltip）；publish-sheet 成功文案区分「已提交审核」；detail-sheet 增加自己待审/未通过提示横幅；use-market 请求携带 ownerId、乐观更新带 PENDING；store 本地模式发布即 APPROVED + persist v3 迁移
+- 验证：lint 0 错误；test-admin-flow.sh 13 步 API 全链路通过（发布 PENDING → 市集不可见 → 本人可见 → 401/口令校验 → 驳回/恢复 → 市集可见）；Agent Browser E2E（390×844）：发布→审核提示→徽标→登录→通过→市集 13 本→下架驳回（原因展示）→恢复上架→数据库核验 APPROVED=12(note:0) 零残留，截图 verify-21~27
+- 踩坑记录：① dev server 持旧 Prisma Client 报 PrismaClientValidationError，重启加载新 client 后恢复（沙箱后台进程不跨工具调用存活，需同调用内「启动+验证」）；② sonner toast 覆盖按钮导致点击被拦截、tab 按钮可达名为「13已上架」，E2E 改用 eval 按 textContent 精确点击；③ 浏览器每次启动为新设备（localStorage 空），归属类用例需同会话内闭环
+- 部署：SHUJI_ADMIN_PASSCODE 注入 Vercel 三环境（CLI 交互异常，preview 走 REST API v10 补注）；测试脚本口令参数化（.env.local 读取，避免 public 仓库泄露）后 git push 自动部署
+
+Stage Summary:
+- 审核闭环上线：未配置口令=发布自动上架（向后兼容），配置后新发布进入待审核队列
+- 管理员口令 SHUJI_ADMIN_PASSCODE=shuji2026（建议用户在 Vercel 后台自行修改）
+- 本地全链路（API + 浏览器）验证通过；生产部署与验证见 Task 6-b

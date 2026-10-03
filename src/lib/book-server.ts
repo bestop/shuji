@@ -1,5 +1,7 @@
-import type { Book } from "@/lib/types";
+import type { Book, BookStatus } from "@/lib/types";
 import { CONDITIONS } from "@/lib/types";
+
+const VALID_STATUS: BookStatus[] = ["PENDING", "APPROVED", "REJECTED"];
 
 /** 将数据库行映射为前端 Book 类型（时间戳转为 ms） */
 export function mapBook(b: {
@@ -16,6 +18,9 @@ export function mapBook(b: {
   sellerWechat: string;
   ownerId: string;
   sold: boolean;
+  status: string;
+  reviewNote: string | null;
+  reviewedAt: Date | null;
   createdAt: Date;
 }): Book {
   return {
@@ -32,6 +37,11 @@ export function mapBook(b: {
     sellerWechat: b.sellerWechat,
     ownerId: b.ownerId,
     sold: b.sold,
+    status: VALID_STATUS.includes(b.status as BookStatus)
+      ? (b.status as BookStatus)
+      : "APPROVED",
+    reviewNote: b.reviewNote ?? undefined,
+    reviewedAt: b.reviewedAt ? b.reviewedAt.getTime() : undefined,
     createdAt: b.createdAt.getTime(),
   };
 }

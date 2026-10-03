@@ -32,6 +32,8 @@ export const useStore = create<State>()(
           id: genId(),
           createdAt: Date.now(),
           sold: false,
+          // 本地模式无审核环节，发布即上架
+          status: "APPROVED",
           ownerId: getDeviceId(),
         };
         set({ books: [book, ...get().books] });
@@ -67,7 +69,7 @@ export const useStore = create<State>()(
     {
       name: "shuji-book-market-v1",
       storage: createJSONStorage(() => localStorage),
-      version: 2,
+      version: 3,
       /** v1 数据使用 mine 字段，迁移为 ownerId（本机发布的书归属于当前设备） */
       migrate: (persisted, version) => {
         const s = persisted as Partial<State> & { books?: (Book & { mine?: boolean })[] };
@@ -79,6 +81,10 @@ export const useStore = create<State>()(
               ownerId: mine ? getDeviceId() : rest.ownerId ?? "seed",
             };
           }) as Book[];
+        }
+        // v3：引入审核状态，历史书籍默认视为已上架
+        if (version < 3 && Array.isArray(s.books)) {
+          s.books = s.books.map((b) => ({ ...b, status: b.status ?? "APPROVED" })) as Book[];
         }
         return s as State;
       },

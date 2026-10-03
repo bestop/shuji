@@ -63,6 +63,7 @@ export const SEED_BOOKS: Book[] = [
     sellerWechat: "nanshan_books",
     createdAt: Date.now() - 2 * DAY,
     sold: false,
+    status: "APPROVED",
     ownerId: "seed",
   },
   {
@@ -79,6 +80,7 @@ export const SEED_BOOKS: Book[] = [
     sellerWechat: "wanfeng_0421",
     createdAt: Date.now() - 3 * DAY,
     sold: false,
+    status: "APPROVED",
     ownerId: "seed",
   },
   {
@@ -95,6 +97,7 @@ export const SEED_BOOKS: Book[] = [
     sellerWechat: "acnotme",
     createdAt: Date.now() - 5 * DAY,
     sold: false,
+    status: "APPROVED",
     ownerId: "seed",
   },
   {
@@ -111,6 +114,7 @@ export const SEED_BOOKS: Book[] = [
     sellerWechat: "wheatcat99",
     createdAt: Date.now() - 1 * DAY,
     sold: false,
+    status: "APPROVED",
     ownerId: "seed",
   },
   {
@@ -127,6 +131,7 @@ export const SEED_BOOKS: Book[] = [
     sellerWechat: "cheese_potato",
     createdAt: Date.now() - 7 * DAY,
     sold: false,
+    status: "APPROVED",
     ownerId: "seed",
   },
   {
@@ -143,6 +148,7 @@ export const SEED_BOOKS: Book[] = [
     sellerWechat: "macondo_2024",
     createdAt: Date.now() - 4 * DAY,
     sold: false,
+    status: "APPROVED",
     ownerId: "seed",
   },
   {
@@ -159,6 +165,7 @@ export const SEED_BOOKS: Book[] = [
     sellerWechat: "guzheng_action",
     createdAt: Date.now() - 6 * DAY,
     sold: false,
+    status: "APPROVED",
     ownerId: "seed",
   },
   {
@@ -175,6 +182,7 @@ export const SEED_BOOKS: Book[] = [
     sellerWechat: "yudan_father",
     createdAt: Date.now() - 9 * DAY,
     sold: false,
+    status: "APPROVED",
     ownerId: "seed",
   },
   {
@@ -191,6 +199,7 @@ export const SEED_BOOKS: Book[] = [
     sellerWechat: "shutter_hand",
     createdAt: Date.now() - 8 * DAY,
     sold: false,
+    status: "APPROVED",
     ownerId: "seed",
   },
   {
@@ -207,6 +216,7 @@ export const SEED_BOOKS: Book[] = [
     sellerWechat: "nightflight_sf",
     createdAt: Date.now() - 10 * DAY,
     sold: false,
+    status: "APPROVED",
     ownerId: "seed",
   },
   {
@@ -223,6 +233,7 @@ export const SEED_BOOKS: Book[] = [
     sellerWechat: "vocab_daily",
     createdAt: Date.now() - 12 * DAY,
     sold: false,
+    status: "APPROVED",
     ownerId: "seed",
   },
   {
@@ -239,6 +250,7 @@ export const SEED_BOOKS: Book[] = [
     sellerWechat: "banmutang_01",
     createdAt: Date.now() - 14 * DAY,
     sold: true,
+    status: "APPROVED",
     ownerId: "seed",
   },
 ];

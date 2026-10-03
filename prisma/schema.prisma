@@ -25,8 +25,15 @@ model Book {
   /// 发布者设备 ID（用于「我的发布」归属与管理鉴权）
   ownerId       String
   sold          Boolean  @default(false)
+  /// 审核状态：PENDING 待审核 / APPROVED 已通过上架 / REJECTED 已驳回
+  status        String   @default("PENDING")
+  /// 驳回原因（管理员填写，仅驳回时存在）
+  reviewNote    String?
+  /// 最近审核时间
+  reviewedAt    DateTime?
   createdAt     DateTime @default(now())
 
   @@index([createdAt])
+  @@index([status])
   @@map("books")
 }

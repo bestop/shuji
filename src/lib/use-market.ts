@@ -37,7 +37,11 @@ export function useMarket(): UseMarketReturn {
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch("/api/books", { cache: "no-store" });
+      // 携带 ownerId：服务端返回「全部已上架 + 自己的待审/驳回书」
+      const res = await fetch(
+        `/api/books?owner=${encodeURIComponent(getDeviceId())}`,
+        { cache: "no-store" }
+      );
       const data = (await res.json()) as { enabled?: boolean; books?: Book[] };
       if (data?.enabled) {
         setServerBooks(Array.isArray(data.books) ? data.books : []);
@@ -83,6 +87,7 @@ export function useMarket(): UseMarketReturn {
         id: `temp-${Date.now()}`,
         ownerId: myId,
         sold: false,
+        status: "PENDING",
         createdAt: Date.now(),
       };
       setServerBooks((prev) => [temp, ...prev]);

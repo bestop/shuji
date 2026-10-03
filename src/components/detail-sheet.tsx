@@ -10,6 +10,8 @@ import {
   Tag,
   Trash2,
   Layers,
+  Clock3,
+  ShieldAlert,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -132,6 +134,45 @@ export function DetailSheet({
                 {timeAgo(book.createdAt)}发布
               </div>
             </div>
+
+            {/* 自己的待审核/未通过书提示（市集里看不到，仅自己可见） */}
+            {isMine && book.status !== "APPROVED" ? (
+              <div
+                className={cn(
+                  "flex items-start gap-2.5 rounded-xl border p-3.5",
+                  book.status === "PENDING"
+                    ? "border-amber-200/80 bg-amber-50"
+                    : "border-destructive/30 bg-destructive/5"
+                )}
+              >
+                {book.status === "PENDING" ? (
+                  <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+                ) : (
+                  <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-destructive" aria-hidden />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={cn(
+                      "text-[13px] font-semibold",
+                      book.status === "PENDING" ? "text-amber-800" : "text-destructive"
+                    )}
+                  >
+                    {book.status === "PENDING" ? "审核中" : "未通过审核"}
+                  </p>
+                  <p
+                    className={cn(
+                      "mt-0.5 text-xs leading-relaxed",
+                      book.status === "PENDING" ? "text-amber-700/90" : "text-destructive/80"
+                    )}
+                  >
+                    {book.status === "PENDING"
+                      ? "管理员确认后会出现在市集，无需重复发布"
+                      : book.reviewNote ||
+                        "内容不符合展示要求，可删除后重新发布"}
+                  </p>
+                </div>
+              </div>
+            ) : null}
 
             {/* 描述 */}
             <div>

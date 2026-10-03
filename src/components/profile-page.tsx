@@ -2,7 +2,17 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Heart, Pencil, PenLine, Store, Trash2, PackageCheck, RotateCcw } from "lucide-react";
+import {
+  ChevronRight,
+  Heart,
+  Pencil,
+  PenLine,
+  ShieldCheck,
+  Store,
+  Trash2,
+  PackageCheck,
+  RotateCcw,
+} from "lucide-react";
 import { toast } from "sonner";
 import { BookCover } from "./book-cover";
 import { formatPrice } from "@/lib/seed";
@@ -16,6 +26,9 @@ type Props = {
   /** 当前设备 ID，用于筛出「我的发布」 */
   myId: string;
   favoriteIds: string[];
+  /** 云端模式下展示管理员入口 */
+  showAdmin: boolean;
+  onOpenAdmin: () => void;
   onOpenBook: (b: Book) => void;
   onToggleSold: (id: string, nextSold: boolean) => void;
   onRemoveBook: (id: string) => void;
@@ -26,6 +39,8 @@ export function ProfilePage({
   books,
   myId,
   favoriteIds,
+  showAdmin,
+  onOpenAdmin,
   onOpenBook,
   onToggleSold,
   onRemoveBook,
@@ -227,6 +242,19 @@ export function ProfilePage({
                       已售出
                     </span>
                   ) : null}
+                  {b.status === "PENDING" ? (
+                    <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-normal text-amber-700">
+                      待审核
+                    </span>
+                  ) : null}
+                  {b.status === "REJECTED" ? (
+                    <span
+                      className="ml-2 rounded bg-destructive/10 px-1.5 py-0.5 text-[10px] font-normal text-destructive"
+                      title={b.reviewNote || undefined}
+                    >
+                      未通过
+                    </span>
+                  ) : null}
                 </p>
               </button>
               {tab === "mine" ? (
@@ -266,6 +294,26 @@ export function ProfilePage({
           ))
         )}
       </div>
+
+      {/* 管理员入口（云端模式展示） */}
+      {showAdmin ? (
+        <button
+          type="button"
+          onClick={onOpenAdmin}
+          className="mt-5 flex w-full items-center gap-3 rounded-2xl border border-stone-200/70 bg-card p-4 text-left shadow-sm transition-colors hover:bg-stone-50"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+            <ShieldCheck className="h-5 w-5 text-primary" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-stone-800">管理员审核</span>
+            <span className="mt-0.5 block text-xs text-stone-400">
+              审核新发布的书籍，维护市集秩序
+            </span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-stone-300" aria-hidden />
+        </button>
+      ) : null}
     </motion.div>
   );
 }
