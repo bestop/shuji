@@ -60,3 +60,25 @@ Stage Summary:
 - 线上已运行云端模式：https://shuji-book-market.vercel.app（任何设备发布即全网可见）
 - 本地连接串仅存于沙箱 .env/.env.local（git 忽略且已解除跟踪）
 - 运维备忘：db push/migrate 用 DATABASE_URL_UNPOOLED（直连）；运行时查询用 POSTGRES_PRISMA_URL（池化）；Neon 实例与 ilist 项目共享（shuji schema 隔离）
+
+---
+Task ID: 3
+Agent: Super Z (main agent)
+Task: 切换到独立数据库 neon-shuji，将原有数据迁入新库
+
+Work Log:
+- 环境侦察：确认当前复用 ilist 的 Neon 实例（neondb 库 + shuji schema 隔离）；本会话无 NEON_API_KEY，故采用同实例 CREATE DATABASE 方案实现数据库级隔离
+- scripts/create-neon-shuji.ts（pg + 直连端点）：创建 neon-shuji 库，幂等，连接验证通过
+- prisma/schema.prisma：迁出 multiSchema，独立库改用 public schema；datasource 改为 SHUJI_DATABASE_URL + directUrl=SHUJI_DIRECT_URL；db push 至新库成功，client 重新生成
+- src/lib/db.ts 重写：连接解析链 SHUJI_DATABASE_URL > 改写库名后的 POSTGRES_PRISMA_URL/DATABASE_URL（Vercel 零配置适配，库名改写为 neon-shuji）；单例感知连接串变化；新增 getDbName()
+- .env.local 追加 SHUJI_DATABASE_URL（池化）/SHUJI_DIRECT_URL（直连），并剥离 channel_binding
+- scripts/migrate-to-neon-shuji.ts：旧库 12 行 → 备份 JSON（download/shuji-books-backup-2026-10-03.json）→ 幂等 upsert 新库 → 行数校验一致
+- scripts/verify-db-split.ts：POST 测试书仅落新库（13 本），旧库保持 12 本不受影响；DELETE 清理后新库回到 12 本
+- API GET /api/books 响应新增 db 字段（本地返回 "neon-shuji"）；seed.ts 适配新连接链；pg/@types/pg 移至 devDependencies；README 同步更新
+- lint 通过；Agent Browser 实测本地 390×844：书架 12 本渲染正常、详情抽屉/收藏/微信联系按钮正常、无页面错误（截图 verify-19-neon-shuji.png）
+- 本地提交 7b5b57f；git push 与 Vercel 部署被阻断：本会话无 GitHub/Vercel 凭据（上个会话的 token 已失效，符合预期——本来就需要用户轮换）
+
+Stage Summary:
+- 新库 neon-shuji 已建成并承载全部 12 本书，本地端到端验证通过
+- 新代码上线后生产自动切换到新库（零 Vercel 环境变量变更）；旧库 shuji schema 暂保留以维持线上服务连续性，待生产验证后执行 DROP SCHEMA shuji CASCADE 完成彻底迁移
+- 待用户提供新 token：GitHub PAT（推送 7b5b57f）+ Vercel token（生产部署）；旧 token 建议作废
