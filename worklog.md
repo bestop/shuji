@@ -157,3 +157,19 @@ Stage Summary:
 - 审核闭环上线：未配置口令=发布自动上架（向后兼容），配置后新发布进入待审核队列
 - 管理员口令 SHUJI_ADMIN_PASSCODE=shuji2026（建议用户在 Vercel 后台自行修改）
 - 本地全链路（API + 浏览器）验证通过；生产部署与验证见 Task 6-b
+
+---
+Task ID: 6-b
+Agent: Super Z (main agent)
+Task: 生产部署与线上验证（管理员审核 + 旧存储断开）
+
+Work Log:
+- git push 432046d → 81984a5（PAT 一次性凭据推送，remote 无 token 残留）
+- Vercel 自动部署（git 触发）：BUILDING → READY，约 2 分钟
+- 生产 API 全链路（scripts/verify-prod-admin.sh）8/8 通过：市集 12 本全 APPROVED → 发布测试书 PENDING → 市集不可见 → 管理员登录 200 → 计数 PENDING=1 → 通过上架 → 市集 13 本 → 删除清理回到 12 本
+- 生产 UI 冒烟（390×844）：12 张书卡正常渲染、「我的」页管理员审核入口可见、无页面错误（截图 verify-28-production-admin-entry.png）
+
+Stage Summary:
+- 线上审核闭环全面生效：https://shuji-book-market.vercel.app
+- 管理员口令：SHUJI_ADMIN_PASSCODE（三环境一致，建议用户自行轮换）
+- 旧存储挂载断开 + 审核功能上线两项工作全部交付并验证
