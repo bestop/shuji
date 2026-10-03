@@ -34,17 +34,31 @@ async function exists(url: string, db: string, t: string): Promise<boolean> {
 
 async function main() {
   const inNew = await exists(env.SHUJI_DATABASE_URL, "neon-shuji", title);
-  const inOld = await exists(
-    env.POSTGRES_PRISMA_URL.replace(/\/neondb\?/, "/neon-shuji?"),
-    "neon-shuji",
-    title
-  );
+
+  // 旧实例：迁移后 neon-shuji 库应已删除，仅检查库是否存在
+  const admin = new Client({ connectionString: env.POSTGRES_URL_NON_POOLING || env.DATABASE_URL_UNPOOLED });
+  await admin.connect();
+  let oldDbExists = false;
+  try {
+    const r = await admin.query(`SELECT 1 FROM pg_database WHERE datname = 'neon-shuji'`);
+    oldDbExists = (r.rowCount ?? 0) > 0;
+  } finally {
+    await admin.end();
+  }
+
   console.log(`书名「${title}」`);
   console.log(`  frosty-rice 新实例 → 存在: ${inNew}`);
-  console.log(`  sweet-fire 旧实例 → 存在: ${inOld}`);
-  if (inNew && !inOld) console.log("✅ 写入落点确认：生产已连接 frosty-rice 新实例");
-  else if (!inNew && inOld) console.log("⚠️ 仍连接旧实例！");
-  else console.log("❓ 结果异常，请人工检查");
+  console.log(`  sweet-fire 旧实例 → neon-shuji 库存在: ${oldDbExists}（预期 false，已清理）`);
+  if (inNew && !oldDbExists) console.log("✅ 写入落点确认：生产已连接 frosty-rice 新实例");
+  else if (inNew && oldDbExists) {
+    const inOldDb = await exists(
+      env.POSTGRES_PRISMA_URL.replace(/\/neondb\?/, "/neon-shuji?"),
+      "neon-shuji",
+      title
+    );
+    console.log(`  sweet-fire 旧实例 → 存在: ${inOldDb}`);
+    console.log(inOldDb ? "⚠️ 仍连接旧实例！" : "✅ 写入落点确认：新实例");
+  } else console.log("❓ 结果异常，请人工检查");
 }
 
 main().catch((e) => {

@@ -105,3 +105,19 @@ Stage Summary:
 - 书集现已运行于完全独立的 Neon 实例 frosty-rice-33455570（独立算力/存储/凭据）
 - 旧共享实例已 100% 还原，shuji 数据零残留（迁移备份: download/shuji-books-backup-2026-10-03.json）
 - 安全提醒：本会话粘贴过的 GitHub PAT / Vercel token / Neon 密码均建议轮换
+
+---
+Task ID: 4
+Agent: Super Z (main agent)
+Task: 核查 Vercel 数据库连接健康状况
+
+Work Log:
+- vercel env ls：SHUJI_DATABASE_URL/SHUJI_DIRECT_URL 三环境（Production/Preview/Development）齐全，指向 frosty-rice；旧 neon-ilist 挂载注入的 POSTGRES_* 变量仍存在（集成例行刷新，非新挂载），已被 SHUJI_* 优先级覆盖，属无害冗余
+- 部署 API 查询：最近三个生产部署均 READY；最新 difkgfcy8（10:59）由 git 提交 687d721 自动触发 → 确认项目已打通 git 自动部署（push 即上线，无需 CLI）
+- check-both-instances.ts 修正：旧实例分支改为检查 neon-shuji 库是否已移除（清理后直连会报 does not exist，属预期）
+- 运行时全链路实测：GET 200（1.35s 含冷启动）/ POST 201（1.0s）→ 落点实锤 frosty-rice（旧实例无库）→ DELETE 200 → 终态 12 本
+- 提交并推送脚本修正（687d721 后追加）
+
+Stage Summary:
+- Vercel → Neon(frosty-rice) 连接健康：读写均正常，唯一承重变量为 SHUJI_*（旧实例库已删，勿删该变量，否则回退链会指向不存在的库）
+- 发现 git 自动部署通道可用，后续部署优先 git push
