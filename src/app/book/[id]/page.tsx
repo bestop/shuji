@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, BookOpen, Clock3, Layers, Tag } from "lucide-react";
+import { ArrowRight, BookOpen, Clock3, Layers, Tag, Truck } from "lucide-react";
 import { hasDb, getDb } from "@/lib/db";
 import { formatPrice, timeAgo } from "@/lib/seed";
+import { cn } from "@/lib/utils";
 import { LandingShareGuide } from "@/components/landing-share-guide";
 
 export const dynamic = "force-dynamic";
@@ -112,6 +113,17 @@ export default async function BookLanding({ params }: Props) {
                 原价 ¥{formatPrice(b.originalPrice)}
               </span>
             ) : null}
+            <span
+              className={cn(
+                "ml-auto flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px]",
+                b.freeShipping
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "bg-stone-100 text-stone-500"
+              )}
+            >
+              <Truck className="h-3 w-3" aria-hidden />
+              {b.freeShipping ? "包邮" : "运费自付"}
+            </span>
           </div>
 
           <div className="mt-4 grid grid-cols-3 gap-2 text-[12px]">

@@ -67,6 +67,7 @@ export async function GET(req: Request, { params }: Params) {
     author: string;
     category: string;
     price: number;
+    freeShipping: boolean;
     sold: boolean;
   } | null = null;
   let ok = false;
@@ -166,6 +167,21 @@ export async function GET(req: Request, { params }: Params) {
               <span style={{ fontSize: 72, fontWeight: 600, letterSpacing: 2 }}>
                 {formatPrice(book!.price)}
               </span>
+              {book!.freeShipping ? (
+                <span
+                  style={{
+                    fontSize: 24,
+                    fontWeight: 600,
+                    letterSpacing: 2,
+                    padding: "8px 26px",
+                    border: "2px solid rgba(255,255,255,0.8)",
+                    borderRadius: 40,
+                    marginLeft: 14,
+                  }}
+                >
+                  包邮
+                </span>
+              ) : null}
             </>
           ) : (
             <span style={{ fontSize: ok ? 60 : 44, fontWeight: 600, letterSpacing: 4 }}>

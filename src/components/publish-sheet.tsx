@@ -8,6 +8,7 @@ import {
   DrawerContent,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { Truck } from "lucide-react";
 import { BookCover } from "./book-cover";
 import { compressImage } from "@/lib/image";
 import { CONDITIONS, CATEGORIES } from "@/lib/types";
@@ -36,6 +37,7 @@ export function PublishSheet({ open, onOpenChange, profile, reviewRequired, onPu
   const [condition, setCondition] = useState<Condition>("几乎全新");
   const [price, setPrice] = useState("");
   const [originalPrice, setOriginalPrice] = useState("");
+  const [freeShipping, setFreeShipping] = useState(false);
   const [description, setDescription] = useState("");
   const [wechat, setWechat] = useState(profile.wechatId);
   const [submitting, setSubmitting] = useState(false);
@@ -54,6 +56,7 @@ export function PublishSheet({ open, onOpenChange, profile, reviewRequired, onPu
     setCondition("几乎全新");
     setPrice("");
     setOriginalPrice("");
+    setFreeShipping(false);
     setDescription("");
   };
 
@@ -103,6 +106,7 @@ export function PublishSheet({ open, onOpenChange, profile, reviewRequired, onPu
         condition,
         price: Math.round(p * 100) / 100,
         originalPrice: op,
+        freeShipping,
         description: description.trim(),
         cover,
         sellerName: profile.nickname || "书友",
@@ -329,6 +333,45 @@ export function PublishSheet({ open, onOpenChange, profile, reviewRequired, onPu
               </div>
             </div>
 
+            {/* 运费 */}
+            <div>
+              <p className="mb-2 text-[13px] font-semibold text-stone-700">运费</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFreeShipping(true)}
+                  className={cn(
+                    "flex items-center justify-center gap-1.5 rounded-xl border py-2 text-[12px] transition-colors",
+                    freeShipping
+                      ? "border-primary bg-primary/10 font-semibold text-primary"
+                      : "border-stone-200 bg-white text-stone-500 hover:border-stone-300"
+                  )}
+                  aria-pressed={freeShipping}
+                >
+                  <Truck className="h-3.5 w-3.5" aria-hidden />
+                  包邮
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFreeShipping(false)}
+                  className={cn(
+                    "flex items-center justify-center gap-1.5 rounded-xl border py-2 text-[12px] transition-colors",
+                    !freeShipping
+                      ? "border-primary bg-primary/10 font-semibold text-primary"
+                      : "border-stone-200 bg-white text-stone-500 hover:border-stone-300"
+                  )}
+                  aria-pressed={!freeShipping}
+                >
+                  运费自付
+                </button>
+              </div>
+              <p className="mt-1.5 text-[11px] leading-relaxed text-stone-400">
+                {freeShipping
+                  ? "运费由你承担，买家无需额外支付，成交更快"
+                  : "同城交易建议当面验书交付；需邮寄时运费由买家承担"}
+              </p>
+            </div>
+
             {/* 描述 */}
             <div>
               <label htmlFor="p-desc" className="mb-1.5 block text-[13px] font-semibold text-stone-700">
@@ -386,6 +429,7 @@ export function PublishSheet({ open, onOpenChange, profile, reviewRequired, onPu
                   </p>
                   <p className="text-sm font-bold text-[#C2540A]">
                     ¥{price || "0"}
+                    {freeShipping ? <span className="ml-1.5 text-[10px] font-medium text-emerald-600">包邮</span> : null}
                   </p>
                 </div>
               </div>

@@ -18,6 +18,8 @@ model Book {
   condition     String
   price         Float
   originalPrice Float?
+  /// 是否由卖家承担运费（包邮）
+  freeShipping  Boolean  @default(false)
   description   String   @default("")
   cover         String?  @db.Text
   sellerName    String

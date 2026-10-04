@@ -47,6 +47,8 @@ export function consumeShareJump(bookId?: string): boolean {
 export function buildBookShare(book: Book) {
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const url = `${origin}/book/${book.id}`;
-  const text = `【易书】《${book.title}》仅售 ¥${formatPrice(book.price)}，快来看看`;
+  const text = `【易书】《${book.title}》仅售 ¥${formatPrice(book.price)}${
+    book.freeShipping ? "（包邮）" : ""
+  }，快来看看`;
   return { title: `易书 · ${book.title}`, text, url };
 }

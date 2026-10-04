@@ -74,6 +74,11 @@ export function BookCard({ book, index = 0, onOpen }: Props) {
                 ¥{formatPrice(book.originalPrice)}
               </span>
             ) : null}
+            {book.freeShipping ? (
+              <span className="ml-auto rounded bg-emerald-50 px-1 py-0.5 text-[9px] font-medium text-emerald-700">
+                包邮
+              </span>
+            ) : null}
           </div>
           <div className="flex items-center justify-between pt-0.5">
             <span className="flex min-w-0 items-center gap-1.5">

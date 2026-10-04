@@ -27,6 +27,8 @@ export type Book = {
   price: number;
   /** 原价（元），可选 */
   originalPrice?: number;
+  /** 是否包邮（运费由卖家承担） */
+  freeShipping?: boolean;
   /** 书籍描述 / 转让原因 */
   description: string;
   /** 封面图 dataURL，未上传时使用生成的渐变封面 */

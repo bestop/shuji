@@ -13,6 +13,7 @@ import {
   Layers,
   Clock3,
   ChevronRight,
+  Truck,
   ShieldAlert,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -130,7 +131,18 @@ export function DetailSheet({
                     原价 ¥{formatPrice(book.originalPrice)}
                   </span>
                 ) : null}
-                <span className="ml-auto rounded-full bg-stone-100 px-2.5 py-1 text-[11px] text-stone-600">
+                <span
+                  className={cn(
+                    "ml-auto flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px]",
+                    book.freeShipping
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-stone-100 text-stone-500"
+                  )}
+                >
+                  <Truck className="h-3 w-3" aria-hidden />
+                  {book.freeShipping ? "包邮" : "运费自付"}
+                </span>
+                <span className="rounded-full bg-stone-100 px-2.5 py-1 text-[11px] text-stone-600">
                   {book.condition}
                 </span>
               </div>

@@ -57,6 +57,7 @@ export const SEED_BOOKS: Book[] = [
     condition: "轻微使用",
     price: 25,
     originalPrice: 108,
+    freeShipping: true,
     description:
       "北京十月文艺出版社的版本，大三读完想传给下一个需要在孙少平身上找力气的人。书脊有轻微折痕，内页干净，仅有少量铅笔划线，可擦。",
     sellerName: "南山书屋",
@@ -108,6 +109,7 @@ export const SEED_BOOKS: Book[] = [
     condition: "几乎全新",
     price: 12,
     originalPrice: 39,
+    freeShipping: true,
     description:
       "郭宏安译本，装帧是很温柔的米色。一个下午就能读完，但值得每隔几年重读一次。买重复了，出一本。",
     sellerName: "麦田里的守望猫",

@@ -16,6 +16,7 @@ type SellerBook = {
   author: string;
   price: number;
   originalPrice: number | null;
+  freeShipping: boolean;
   cover: string | null;
   sold: boolean;
 };
@@ -231,6 +232,11 @@ function BookTile({ book: b, sold = false }: { book: SellerBook; sold?: boolean 
           {b.originalPrice ? (
             <span className="text-[10px] text-stone-400 line-through">
               ¥{formatPrice(b.originalPrice)}
+            </span>
+          ) : null}
+          {b.freeShipping ? (
+            <span className="ml-auto rounded bg-emerald-50 px-1 py-0.5 text-[9px] font-medium text-emerald-700">
+              包邮
             </span>
           ) : null}
         </div>

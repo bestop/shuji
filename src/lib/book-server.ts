@@ -12,6 +12,7 @@ export function mapBook(b: {
   condition: string;
   price: number;
   originalPrice: number | null;
+  freeShipping: boolean;
   description: string;
   cover: string | null;
   sellerName: string;
@@ -31,6 +32,7 @@ export function mapBook(b: {
     condition: b.condition as Book["condition"],
     price: b.price,
     originalPrice: b.originalPrice ?? undefined,
+    freeShipping: b.freeShipping,
     description: b.description,
     cover: b.cover ?? undefined,
     sellerName: b.sellerName,
@@ -49,7 +51,7 @@ export function mapBook(b: {
 export function validateBookPayload(body: Record<string, unknown>):
   | { ok: true; data: {
       title: string; author: string; category: string; condition: string;
-      price: number; originalPrice?: number; description: string;
+      price: number; originalPrice?: number; freeShipping: boolean; description: string;
       cover?: string; sellerName: string; sellerWechat: string; ownerId: string;
     } }
   | { ok: false; error: string } {
@@ -66,6 +68,7 @@ export function validateBookPayload(body: Record<string, unknown>):
   const cover = str(body.cover) || undefined;
   const price = Number(body.price);
   const originalPriceRaw = body.originalPrice;
+  const freeShipping = body.freeShipping === true || body.freeShipping === "true";
 
   if (!title || title.length > 60) return { ok: false, error: "书名不能为空且不超过 60 字" };
   if (!Number.isFinite(price) || price <= 0 || price > 99999)
@@ -93,6 +96,7 @@ export function validateBookPayload(body: Record<string, unknown>):
         originalPriceRaw !== undefined && originalPriceRaw !== null && originalPriceRaw !== ""
           ? Math.round(Number(originalPriceRaw) * 100) / 100
           : undefined,
+      freeShipping,
       description,
       cover,
       sellerName,

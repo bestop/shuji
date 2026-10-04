@@ -337,6 +337,7 @@ export function AdminSheet({ open, onOpenChange, onChanged }: Props) {
                           </p>
                           <p className="mt-0.5 truncate text-xs text-stone-400">
                             {b.sellerName} · {b.condition} · {timeAgo(b.createdAt)}
+                            {b.freeShipping ? " · 包邮" : ""}
                           </p>
                           <p className="mt-0.5 text-sm font-bold text-[#C2540A]">
                             ¥{formatPrice(b.price)}
