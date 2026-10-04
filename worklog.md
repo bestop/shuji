@@ -263,3 +263,19 @@ Stage Summary:
 - 微信内两条转发路径齐备：①长按卡图直发图片（含二维码，好友识码直达本书）②「···」转发本书链接卡；朋友圈可保存图后发图
 - 书籍 OG 卡带二维码成为自足分享物；链接卡/落地页/浮层三条路径的文案与视觉统一
 - 本地 .env.local 已用生产同款连接串恢复（gitignored，不入库）；会话遗留提醒：凭据轮换
+
+---
+Task ID: 12
+Agent: Super Z (main agent)
+Task: 「···」转发链接去掉 ?share=1 尾巴（引导触发改用 sessionStorage 标记）
+
+Work Log:
+- 原 ?share=1 参数仅用于触发落地页自动引导，但「···」转发取当前 URL → 转发出去带尾巴
+- share.ts 新增 markShareJump/consumeShareJump（sessionStorage，键 ys:share-jump，隐私模式 try/catch 静默降级）；标记指向 bookId 且读取即清除（刷新/回退不重复弹）
+- detail-sheet：跳转前 markShareJump(book.id) → location.href = 干净 /book/{id}；landing-share-guide 改为 consumeShareJump(bookId) 触发，兼容旧 ?share=1；落地页传 bookId
+- verify-share-flow.mjs 升级：URL 干净断言 + 标记一次性断言（刷新不弹）+ 好友/非微信不弹
+- lint 0 错 + build 通过；提交 6ea3c4c 部署 READY；生产 8/8 通过：跳转 URL = https://ys.hikid.vip/book/seed-04（无参数）、引导正常、卡图内嵌、标记一次性
+
+Stage Summary:
+- 「···」转发出去的本书链接为纯 /book/{id}；应用内分享跳转 → 引导弹出改由会话标记驱动，URL 零污染
+- 好友反复打开链接/刷新均不再看到引导；旧 ?share=1 链接仍兼容
