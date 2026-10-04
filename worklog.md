@@ -315,3 +315,22 @@ Stage Summary:
 - 本地与生产的 SHUJI_* 连接串统一迁移到 Neon 新主机名格式；本地 DB 验证能力恢复（下次本地 e2e 可直连真实数据）
 - 更正 worklog Task 13 的「密码轮换」误判：实际为主机名格式升级
 - 注意：.env.local 中无 SHUJI_ADMIN_PASSCODE（本地 review:false、发布免审；生产已有该变量、review:true），本地若要测管理员审核流需用户提供口令
+
+---
+Task ID: 15
+Agent: Super Z (main agent)
+Task: 「是否包邮」全链路实现复核——1 检查并优化逻辑；2 优化 UI
+
+Work Log:
+- 背景还原：包邮功能基础版已在上一会话实现并部署（4785e62：schema 加 freeShipping、发布表单运费选择、API 校验、详情/卡片/书摊/落地页/OG 卡/分享文案展示）；本会话发现另一未推送提交 68c93f4（OG 卡包邮胶囊从 baseline 内嵌改为 flex-end 独立胶囊，修复垂直对齐），随本次一并上线
+- 逻辑体检结论：①PATCH/DELETE 鉴权无新字段漏洞（PATCH 仅允许 sold，ownerId 校验完好）；②本地模式 store/use-market 经 {...input} 透传 freeShipping 正常；③localStorage v3 旧数据 freeShipping=undefined 时按「运费自付」展示，行为正确无需迁移；④发现 scripts/seed.ts 缺 freeShipping 字段、与库内数据（seed-01/04 已手工置 true）及前端种子不一致 → 已补字段并把 upsert update 分支改为幂等同步 freeShipping（不碰其他数据），重跑验证通过
+- 校验加固：validateBookPayload 的 freeShipping 解析容忍 true/"true"/1，其余一律 false
+- UI 优化：①详情弹层与落地页价格行 flex-wrap + gap-y 防窄屏溢出，包邮+成色徽章成组（ml-auto 容器）换行不散架；②发布表单「运费自付」补 HandCoins 图标与「包邮」Truck 对称，运费选择器加 role=group/aria-label 无障碍标注；③我的发布/收藏列表副标题补「· 包邮」（与管理员面板一致）；④书籍落地页 og:description 补「· 包邮」（分享到微信/社交的描述更完整）
+- 验证脚本升级：verify-shipping.mjs 新增发布表单交互断言（打开抽屉→选包邮→预览出现绿标→切回自付→消失，span.text-emerald-600 精确定位）与 VERIFY_MODE=prod 生产只读模式（生产开启审核、POST 进待审队列不可见，改用种子书 seed-01 包邮/seed-02 自付断言，零写操作）；新增 run-verify-local.sh 一键 dev+验证
+- 验证结果：lint 0 错误 + build 通过；本地 shipping 13/13（含 3 条新表单断言）；提交 860ae20 推送部署 dpl_49MqpR3aMAWeRJtnGvhUSmisgEaL READY 后，生产 shipping 只读 8/8 + 分享闭环 8/8 + 卖家书摊 17/17 全绿；生产 og:description 包邮书带标/自付书不带验证通过；生产 OG 卡 PNG 目检（¥25 + 包邮胶囊 + 二维码）视觉正常（verify-35-prod-shipping.png）
+- 插曲：run-verify-local.sh 首版在调用内 pkill 导致工具调用异常返回，改为 kill 指定 PID 后稳定；verify-share-flow/seller-page 的 BASE 默认即生产地址，本地跑这两个套件时实际已是对生产的只读回归（25/25 通过）
+
+Stage Summary:
+- 「是否包邮」功能完成逻辑复查与 UI 优化并上线：发布可选包邮/运费自付，买家在详情/卡片/书摊/落地页/分享卡/分享描述全场景可见
+- 种子数据 seed-01（平凡的世界）/seed-04（小王子）为包邮示例，seed 脚本现在可幂等修复库内种子运费标记
+- 回归基线全部通过，生产 https://ys.hikid.vip 运行正常
