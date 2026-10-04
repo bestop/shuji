@@ -334,3 +334,25 @@ Stage Summary:
 - 「是否包邮」功能完成逻辑复查与 UI 优化并上线：发布可选包邮/运费自付，买家在详情/卡片/书摊/落地页/分享卡/分享描述全场景可见
 - 种子数据 seed-01（平凡的世界）/seed-04（小王子）为包邮示例，seed 脚本现在可幂等修复库内种子运费标记
 - 回归基线全部通过，生产 https://ys.hikid.vip 运行正常
+
+---
+Task ID: 16
+Agent: Super Z (main agent)
+Task: 「图片最多上传 6 张」——发布多图上传全链路实现（逻辑优化 + UI 优化）
+
+Work Log:
+- 背景检查：Task 15（包邮）已上线；沙箱重置导致 .env.local 丢失 → 用会话内 Task 14 验证过的 Neon 新主机名连接串重建（gitignored），本地 DB 验证能力恢复
+- Schema：Book 加 images Json?（附加实拍图，不含封面，≤5 张，加封面合计 6 张）；prisma db push 至生产库 neon-shuji 成功（nullable 零风险），client 重新生成
+- 架构决策（防包体膨胀）：DB images 只存封面之外的附加图；客户端 Book.images 语义 = 完整图集（封面为首张，utils.toGallery 统一合并，≤1 张不下发）；市集列表/管理列表 stripImagesForList 瘦身（多图书仅下发 imageCount），详情弹层打开时按需 GET /api/books/[id] 拉取图集（模块级 Map 缓存，拉取失败优雅降级为仅封面）
+- API：POST 校验附加图数组（每张 data:image/ 前缀 + ≤500K chars，最多 5 张）；新增 GET /api/books/[id] 单本详情（可见性与列表一致：APPROVED 公开、待审/驳回仅本人携带 owner 可见）；admin/books 列表同步瘦身
+- 发布表单 UI 重设计：单封面块 → 3 列方图网格（最多 6 格）；n/6 计数；第一张「封面」绿徽章，其余张「设为封面」胶囊（点击移到最前）；右上 X 移除（移除封面后下一张自动顶上）；多选文件逐张校验（类型/8MB）→ 压缩（720px q0.72）→ 追加；一次选超量自动截取 + toast 提示；底部提示文案随张数变化
+- 详情弹层：新增 BookGallery 子组件（key=book.id 换书即重挂载，规避 react-hooks/set-state-in-effect lint 错误）——多图书主图 + 缩略图条 + n/m 计数 chip，点缩略图切换；单图书保持 BookCover 渐变封面视觉不变
+- 展示补全：市集/我的/收藏书卡封面右下角「N图」角标（Images 图标）；书籍落地页 OG 卡下方加实拍图横滑条（服务端渲染）；seller 书摊页查询加显式 select 防大字段进 RSC payload；OG 分享卡为纯渐变设计不受影响
+- 本地数据层：store.addBook / use-market 乐观临时书均用 toGallery 合并完整图集，Book.images 语义两端一致
+- 验证：lint 0 错误 + build 通过；verify-images.mjs 本地 17/17（7 选 6 截取/超量 toast/封面徽章/设为封面换位/移除恢复/列表瘦身断言/详情按需拉取/缩略图切换/卡片角标/落地页横滑条/删除清理）；回归 verify-shipping.mjs 13/13；截图目检 3 张（表单网格/详情图集/切图高亮）视觉正常
+- 提交 8006824；git push 与 Vercel 部署因沙箱重置无凭据（PAT/token 均失效）暂缓，待用户提供
+
+Stage Summary:
+- 发布可传最多 6 张实拍图：第一张即封面（列表/OG 卡/分享缩略图用它），详情弹层多图画廊可切换，落地页横滑条展示全图
+- 列表接口瘦身：多图图集按需拉取，书单响应不随图片数量膨胀（生产可靠性关键）
+- 本地已全部验证通过；待用户提供 GitHub PAT（或 Vercel token）即可推送部署上线
