@@ -151,7 +151,7 @@ export default async function BookLanding({ params }: Props) {
         </div>
       </div>
       {/* 应用内分享跳转而来时，自动弹出「···」转发引导（内嵌分享卡图，支持长按直发） */}
-      <LandingShareGuide cardUrl={`/api/og/book/${b.id}`} />
+      <LandingShareGuide cardUrl={`/api/og/book/${b.id}`} bookId={b.id} />
     </main>
   );
 }

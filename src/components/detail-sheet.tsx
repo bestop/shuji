@@ -22,7 +22,7 @@ import {
 import { BookCover } from "./book-cover";
 import { formatPrice, timeAgo } from "@/lib/seed";
 import { copyText } from "@/lib/image";
-import { buildBookShare, isWeChat } from "@/lib/share";
+import { buildBookShare, isWeChat, markShareJump } from "@/lib/share";
 import type { Book } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -68,11 +68,13 @@ export function DetailSheet({
 
     // 微信 WebView 的「···」原生转发固定取当前加载页的 URL：
     // 详情只是首页上的弹层、URL 不变，直接引导转发出去的永远是首页链接。
-    // 因此先复制文案兜底，再整页跳到带独立标题/分享卡的落地页，
-    // 落地页会自动弹出转发引导，此时「···」转发出去的才是本书链接。
+    // 因此先复制文案兜底，再整页跳到带独立标题/分享卡的落地页：
+    // 用 sessionStorage 打标记触发引导（而非 URL 参数），
+    // 这样落地页 URL 保持干净，转发出去的才是纯 /book/{id} 链接。
     if (isWeChat()) {
       await copyText(`${text} ${url}`);
-      window.location.href = `${url}?share=1`;
+      markShareJump(book.id);
+      window.location.href = url;
       return;
     }
 

@@ -1,8 +1,9 @@
 /**
- * 生产环境实测微信分享闭环：
- * 1) 首页点开一本书 → 详情弹层点「分享」→ 应整页跳转 /book/{id}?share=1
- * 2) 落地页自动弹出「···」转发引导浮层
- * 3) 直接访问 /book/{id}?share=1（无微信 UA）不弹引导；带微信 UA 弹引导
+ * 生产环境实测微信分享闭环（sessionStorage 标记版）：
+ * 1) 首页点开一本书 → 详情弹层点「分享」→ 整页跳转干净的 /book/{id}（无 ?share=1）
+ * 2) 落地页读到会话标记 → 自动弹出转发引导（内嵌卡图）
+ * 3) 标记一次性：关闭引导后刷新不再弹出
+ * 4) 好友视角（无标记）与非微信 UA 均不弹引导
  */
 import { chromium } from "playwright";
 
@@ -16,7 +17,7 @@ const ok = (name, cond, extra = "") =>
 const browser = await chromium.launch();
 
 try {
-  // ---- 场景 1：微信 UA 首页 → 书籍详情 → 点分享 → 跳落地页 → 自动引导 ----
+  // ---- 场景 1：微信 UA 首页 → 书籍详情 → 点分享 → 干净落地页 → 自动引导 ----
   const ctx = await browser.newContext({
     userAgent: WX_UA,
     viewport: { width: 390, height: 844 },
@@ -24,67 +25,63 @@ try {
     hasTouch: true,
     locale: "zh-CN",
   });
-  // 授予剪贴板权限，模拟微信内可复制
   await ctx.grantPermissions(["clipboard-read", "clipboard-write"], { origin: BASE });
 
   const page = await ctx.newPage();
   await page.goto(BASE + "/", { waitUntil: "networkidle", timeout: 45000 });
 
-  // 点第一张书卡打开详情弹层
   const card = page.locator("[class*='cursor-pointer'], button, a").filter({ hasText: /¥/ }).first();
   await card.click({ timeout: 15000 });
-  await page.waitForTimeout(900); // 等弹层动画
+  await page.waitForTimeout(900);
 
-  // 详情弹层内点「分享」按钮（aria-label="分享"）
   const shareBtn = page.locator('[aria-label="分享"]');
   ok("详情弹层出现分享按钮", (await shareBtn.count()) > 0);
   await shareBtn.first().click();
 
-  // 应整页跳转到 /book/{id}?share=1
-  await page.waitForURL(/\/book\/.+\?share=1/, { timeout: 15000 });
-  ok("点分享后整页跳转落地页", true, page.url());
+  // 整页跳转到落地页，且 URL 干净（无 ?share=1）
+  await page.waitForURL(/\/book\/[^?]+$/, { timeout: 15000 });
+  const cleanUrl = !page.url().includes("?");
+  ok("点分享后整页跳转，URL 干净无参数", cleanUrl, page.url());
 
-  // 落地页自动弹出转发引导（延迟 400ms）
+  // 落地页读到会话标记 → 自动弹出转发引导
   await page.waitForSelector("text=把这本书转发给朋友", { timeout: 6000 });
   ok("落地页自动弹出转发引导", true);
-  // 引导浮层内嵌分享卡图（长按直发/保存/识码）
   const cardImg = page.locator('[aria-label="分享引导"] img[src*="/api/og/book/"]');
   ok("引导浮层内嵌分享卡图", (await cardImg.count()) > 0);
   await page.screenshot({ path: "scripts/verify-30-share-guide.png" });
 
-  // 落地页标题 = 书籍独立标题（微信转发卡取它）
   const title = await page.title();
   ok("落地页标题带书名与价格", /《.+》仅售 ¥.+ · 易书/.test(title), title);
 
-  // 引导浮层点「我知道了」可关闭
   await page.click("text=我知道了");
   await page.waitForTimeout(400);
-  const guideGone = (await page.locator("text=把这本书转发给朋友").count()) === 0;
-  ok("点「我知道了」关闭引导", guideGone);
+
+  const bookId = /\/book\/([^?]+)/.exec(page.url())?.[1] ?? "seed-04";
+
+  // 标记一次性：关闭后刷新不再弹出（好友收到链接反复打开也不会被打扰）
+  await page.reload({ waitUntil: "networkidle" });
+  await page.waitForTimeout(900);
+  ok("标记一次性：刷新后引导不再弹出", (await page.locator("text=把这本书转发给朋友").count()) === 0);
   await ctx.close();
 
-  // ---- 场景 2：好友视角（微信 UA）直接打开分享卡落地页 → 不应自动弹引导 ----
+  // ---- 场景 2：好友视角（微信 UA、无标记）直接打开落地页 → 不弹引导 ----
   const ctx2 = await browser.newContext({
     userAgent: WX_UA,
     viewport: { width: 390, height: 844 },
     isMobile: true,
   });
   const p2 = await ctx2.newPage();
-  const m = /\/book\/([^?]+)\?/.exec(page.url());
-  const bookId = m ? m[1] : "seed-04";
   await p2.goto(`${BASE}/book/${bookId}`, { waitUntil: "networkidle", timeout: 45000 });
   await p2.waitForTimeout(900);
-  const noGuide = (await p2.locator("text=把这本书转发给朋友").count()) === 0;
-  ok("好友视角打开落地页不弹引导", noGuide);
+  ok("好友视角打开落地页不弹引导", (await p2.locator("text=把这本书转发给朋友").count()) === 0);
   await ctx2.close();
 
-  // ---- 场景 3：非微信浏览器访问 ?share=1 → 也不弹微信引导 ----
+  // ---- 场景 3：非微信浏览器打开 → 不弹微信引导 ----
   const ctx3 = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const p3 = await ctx3.newPage();
-  await p3.goto(`${BASE}/book/${bookId}?share=1`, { waitUntil: "networkidle", timeout: 45000 });
+  await p3.goto(`${BASE}/book/${bookId}`, { waitUntil: "networkidle", timeout: 45000 });
   await p3.waitForTimeout(900);
-  const noGuide3 = (await p3.locator("text=把这本书转发给朋友").count()) === 0;
-  ok("非微信 UA 访问 ?share=1 不弹引导", noGuide3);
+  ok("非微信 UA 打开不弹引导", (await p3.locator("text=把这本书转发给朋友").count()) === 0);
   await ctx3.close();
 } catch (e) {
   ok("流程异常", false, e.message);
