@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Copy,
   Heart,
@@ -11,6 +12,7 @@ import {
   Trash2,
   Layers,
   Clock3,
+  ChevronRight,
   ShieldAlert,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -197,20 +199,29 @@ export function DetailSheet({
               </p>
             </div>
 
-            {/* 卖家卡片 */}
+            {/* 卖家卡片：点名字进 TA 的书摊，看在售/已卖出的书 */}
             <div className="flex items-center gap-3 rounded-xl border border-stone-200/70 bg-white p-3.5">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-                {book.sellerName.slice(0, 1)}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-stone-800">{book.sellerName}</p>
-                <p className="mt-0.5 flex items-center gap-1 text-xs text-stone-400">
-                  微信号
-                  <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[11px] text-stone-600">
-                    {book.sellerWechat}
-                  </span>
-                </p>
-              </div>
+              <Link
+                href={`/seller/${encodeURIComponent(book.ownerId)}?name=${encodeURIComponent(book.sellerName)}`}
+                className="flex min-w-0 flex-1 items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-primary"
+                aria-label={`查看 ${book.sellerName} 的书摊`}
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                  {book.sellerName.slice(0, 1)}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-0.5 text-sm font-semibold text-stone-800">
+                    <span className="truncate">{book.sellerName}</span>
+                    <ChevronRight className="h-3.5 w-3.5 shrink-0 text-stone-400" aria-hidden />
+                  </p>
+                  <p className="mt-0.5 flex items-center gap-1 text-xs text-stone-400">
+                    微信号
+                    <span className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-[11px] text-stone-600">
+                      {book.sellerWechat}
+                    </span>
+                  </p>
+                </div>
+              </Link>
               <button
                 type="button"
                 onClick={async () => {

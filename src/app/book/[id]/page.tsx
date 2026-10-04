@@ -91,7 +91,15 @@ export default async function BookLanding({ params }: Props) {
             ) : null}
           </div>
           <p className="mt-1 text-sm text-stone-500">
-            {b.author} 著 · 由「{b.sellerName}」发布
+            {b.author} 著 · 由{" "}
+            <Link
+              href={`/seller/${encodeURIComponent(b.ownerId)}?name=${encodeURIComponent(b.sellerName)}`}
+              className="font-medium text-stone-700 underline decoration-stone-300 underline-offset-2 transition-colors hover:text-primary"
+              aria-label={`查看 ${b.sellerName} 的书摊`}
+            >
+              「{b.sellerName}」
+            </Link>{" "}
+            发布
           </p>
 
           <div className="mt-4 flex items-baseline gap-2">
