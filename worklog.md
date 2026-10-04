@@ -244,3 +244,22 @@ Stage Summary:
 - 微信分享闭环修正完成：应用内点分享 → 整页跳书籍落地页 → 「···」转发出去的卡片 = 本书链接 + 书名标题 + 书籍 OG 卡图；好友点开直达该书
 - 卖家现在也能分享自己的已上架书
 - 微信内无 JS-SDK 的前提下，卡片描述文字仍为默认抓取（需认证服务号才能自定义），链接/标题/缩略图均已正确
+
+---
+Task ID: 11
+Agent: Super Z (main agent)
+Task: 「微信转发出去的是本书链接，能否直接转发这个卡片」——卡片图直发 + 二维码闭环
+
+Work Log:
+- 方案定性：微信「···」对 H5 只能转发链接卡（无 JS-SDK 无法自定义），无法程序化直发图片；落地做法=把分享卡图放进引导浮层，微信原生支持长按图片 →「发送给朋友」/保存/识别二维码
+- OG 动态卡新增二维码：qrcode 库（bun 安装，同步 bun.lock）生成指向 {site}/book/{id} 的 PNG data URI，白色圆角面板置于右下角 + 「长按识别 · 直达本书」；NEXT_PUBLIC_SITE_URL 兜底 ys.hikid.vip；try/catch 失败降级为原口号版卡片
+- share-guide.tsx 重构：新增 cardUrl prop，浮层内嵌卡图 + 「长按上方卡片图」提示 + 「···」链接转发备用路径；浮层内部点击 stopPropagation 不再误关；文案改为「把这本书转发给朋友」
+- 落地页传 cardUrl=/api/og/book/{id}，页脚提示更新为「长按上方卡片图可发给朋友 · 右上角「···」可转发本书链接」
+- 排查插曲：Vercel 生产 SHUJI_DATABASE_URL 显示为空 → 实为 type:sensitive 只写变量（API 永不回读），生产配置完好；沙箱本会话 Neon Postgres 握手不通（TCP 通但 Prisma P1001），本地验证改用临时 OG_TEST_BOOK 开关渲染后剔除
+- 本地+生产双重验证：pyzbar 解码生产卡片二维码 = https://ys.hikid.vip/book/seed-04 ✓；verify-share-flow.mjs 升级卡图断言后 8/8 通过；截图目检引导浮层（卡图+二维码+双路径提示）视觉正常
+- 提交 696471e + 脚本适配小提交，部署 READY；沙箱全库 mode 755 噪音已用 core.fileMode false 屏蔽
+
+Stage Summary:
+- 微信内两条转发路径齐备：①长按卡图直发图片（含二维码，好友识码直达本书）②「···」转发本书链接卡；朋友圈可保存图后发图
+- 书籍 OG 卡带二维码成为自足分享物；链接卡/落地页/浮层三条路径的文案与视觉统一
+- 本地 .env.local 已用生产同款连接串恢复（gitignored，不入库）；会话遗留提醒：凭据轮换
