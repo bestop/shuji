@@ -47,6 +47,9 @@ try {
   // 落地页自动弹出转发引导（延迟 400ms）
   await page.waitForSelector("text=点击右上角「···」菜单", { timeout: 6000 });
   ok("落地页自动弹出转发引导", true);
+  // 引导浮层内嵌分享卡图（长按直发/保存/识码）
+  const cardImg = page.locator('[aria-label="分享引导"] img[src*="/api/og/book/"]');
+  ok("引导浮层内嵌分享卡图", (await cardImg.count()) > 0);
   await page.screenshot({ path: "scripts/verify-30-share-guide.png" });
 
   // 落地页标题 = 书籍独立标题（微信转发卡取它）

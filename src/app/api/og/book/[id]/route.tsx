@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import QRCode from "qrcode";
 import { hasDb, getDb } from "@/lib/db";
 import { formatPrice, gradientFor } from "@/lib/seed";
 
@@ -40,6 +41,23 @@ function clampTitle(s: string, max: number) {
   return t.length > max ? `${t.slice(0, max)}…` : t;
 }
 
+/** 生成指向本书落地页的二维码 PNG data URI；失败返回 null（降级为无码卡片） */
+async function buildQr(bookId: string): Promise<string | null> {
+  try {
+    const site = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ys.hikid.vip";
+    const png = await QRCode.toBuffer(`${site}/book/${bookId}`, {
+      type: "png",
+      width: 320,
+      margin: 1,
+      errorCorrectionLevel: "M",
+      color: { dark: "#1c1917ff", light: "#ffffffff" },
+    });
+    return `data:image/png;base64,${png.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(req: Request, { params }: Params) {
   const { id } = await params;
 
@@ -66,6 +84,7 @@ export async function GET(req: Request, { params }: Params) {
 
   const font = await loadFont(req);
   const [c1, c2] = gradientFor(id);
+  const qr = ok ? await buildQr(id) : null;
   const title = ok ? clampTitle(book!.title, 18) : "易书";
   const author = ok
     ? `${book!.author} 著 · ${book!.category}`
@@ -132,7 +151,7 @@ export async function GET(req: Request, { params }: Params) {
         </div>
       </div>
 
-      {/* 底栏价格与口号 */}
+      {/* 底栏价格与二维码 */}
       <div
         style={{
           display: "flex",
@@ -154,15 +173,41 @@ export async function GET(req: Request, { params }: Params) {
             </span>
           )}
         </div>
-        <span
-          style={{
-            fontSize: 24,
-            letterSpacing: 4,
-            color: "rgba(255,255,255,0.72)",
-          }}
-        >
-          易书 · 让好书流动起来
-        </span>
+        {qr ? (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 6,
+              padding: 12,
+              backgroundColor: "#ffffff",
+              borderRadius: 14,
+            }}
+          >
+            <img src={qr} width={150} height={150} alt="" />
+            <span
+              style={{
+                fontSize: 16,
+                fontWeight: 600,
+                letterSpacing: 1,
+                color: "#1c1917",
+              }}
+            >
+              长按识别 · 直达本书
+            </span>
+          </div>
+        ) : (
+          <span
+            style={{
+              fontSize: 24,
+              letterSpacing: 4,
+              color: "rgba(255,255,255,0.72)",
+            }}
+          >
+            易书 · 让好书流动起来
+          </span>
+        )}
       </div>
     </div>
   );

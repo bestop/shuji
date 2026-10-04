@@ -11,7 +11,7 @@ import { isWeChat } from "@/lib/share";
  * 链接与书籍卡片图）。本组件在落地页加载后自动弹出「···」转发引导。
  * 好友点开分享卡进来的普通访客不带该参数，不会看到引导。
  */
-export function LandingShareGuide() {
+export function LandingShareGuide({ cardUrl }: { cardUrl?: string }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -25,5 +25,5 @@ export function LandingShareGuide() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  return <ShareGuide open={open} onClose={() => setOpen(false)} />;
+  return <ShareGuide open={open} onClose={() => setOpen(false)} cardUrl={cardUrl} />;
 }

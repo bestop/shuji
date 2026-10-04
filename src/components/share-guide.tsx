@@ -6,14 +6,17 @@ import { ArrowUpRight, BookOpen } from "lucide-react";
 type Props = {
   open: boolean;
   onClose: () => void;
+  /** 书籍分享卡图（传入后浮层内直接展示，微信内长按即可发送/保存/识别二维码） */
+  cardUrl?: string;
 };
 
 /**
  * 微信内分享引导浮层：
  * 微信 WebView 不提供 Web Share API，也无公众号 JS-SDK 配置，
- * 标准做法是引导用户点击右上角「···」使用原生转发。
+ * 两条转发路径：① 长按下方卡片图 → 原生菜单「发送给朋友」（图片直发）；
+ * ② 点右上角「···」→「转发给朋友」（本书链接卡）。
  */
-export function ShareGuide({ open, onClose }: Props) {
+export function ShareGuide({ open, onClose, cardUrl }: Props) {
   return (
     <AnimatePresence>
       {open ? (
@@ -40,30 +43,46 @@ export function ShareGuide({ open, onClose }: Props) {
             </motion.div>
           </div>
 
-          {/* 中央说明卡片 */}
-          <div className="absolute left-1/2 top-1/2 w-[80%] max-w-xs -translate-x-1/2 -translate-y-1/2">
+          {/* 中央说明卡片（点击内部不关闭，仅点遮罩或按钮关闭） */}
+          <div className="absolute left-1/2 top-1/2 w-[84%] max-w-sm -translate-x-1/2 -translate-y-1/2">
             <motion.div
               initial={{ opacity: 0, y: 14, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ delay: 0.15, duration: 0.22 }}
-              className="rounded-2xl bg-white p-6 text-center shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+              className="max-h-[76vh] overflow-y-auto rounded-2xl bg-white p-5 text-center shadow-2xl"
             >
-              <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
+              <span className="mx-auto mb-2.5 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                 <BookOpen className="h-5 w-5 text-primary" aria-hidden />
               </span>
               <p className="text-[15px] font-semibold text-stone-800">
-                点击右上角「···」菜单
+                把这本书转发给朋友
               </p>
-              <p className="mt-1 text-[13px] leading-relaxed text-stone-500">
-                选择「转发给朋友」或「分享到朋友圈」
+
+              {cardUrl ? (
+                <>
+                  <img
+                    src={cardUrl}
+                    alt="本书分享卡片"
+                    className="mt-3 w-full rounded-xl border border-stone-200/70 shadow-sm"
+                  />
+                  <p className="mt-2.5 rounded-lg bg-primary/5 px-3 py-2 text-[13px] leading-relaxed text-stone-600">
+                    <span className="font-semibold text-primary">长按上方卡片图</span>
+                    ：可直接「发送给朋友」、保存图片，或识别二维码直达本书
+                  </p>
+                </>
+              ) : null}
+
+              <p className="mt-2.5 text-xs leading-relaxed text-stone-500">
+                也可以点右上角「···」→「转发给朋友」，发送本书链接
               </p>
-              <p className="mt-3 rounded-lg bg-stone-50 px-3 py-2 text-xs leading-relaxed text-stone-400">
+              <p className="mt-1.5 rounded-lg bg-stone-50 px-3 py-1.5 text-xs text-stone-400">
                 分享文案已复制，也可以直接粘贴给好友
               </p>
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-4 h-10 w-full rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                className="mt-3.5 h-10 w-full rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 我知道了
               </button>

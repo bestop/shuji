@@ -144,14 +144,14 @@ export default async function BookLanding({ params }: Props) {
             <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
           <p className="mt-3 text-center text-xs leading-relaxed text-stone-400">
-            微信内可点击右上角「···」把这本书转发给朋友
+            长按上方卡片图可发给朋友 · 右上角「···」可转发本书链接
             <br />
             交易请当面验书 · 易书 ys.hikid.vip
           </p>
         </div>
       </div>
-      {/* 应用内分享跳转而来时，自动弹出「···」转发引导 */}
-      <LandingShareGuide />
+      {/* 应用内分享跳转而来时，自动弹出「···」转发引导（内嵌分享卡图，支持长按直发） */}
+      <LandingShareGuide cardUrl={`/api/og/book/${b.id}`} />
     </main>
   );
 }
