@@ -19,6 +19,9 @@ type SellerBook = {
   freeShipping: boolean;
   cover: string | null;
   sold: boolean;
+  sellerName: string;
+  sellerWechat: string | null;
+  createdAt: Date;
 };
 
 type Props = {
@@ -56,6 +59,7 @@ const fetchSellerBooks = cache(
           cover: true,
           sold: true,
           sellerName: true,
+          sellerWechat: true,
           createdAt: true,
         },
       });
