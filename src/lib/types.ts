@@ -31,8 +31,15 @@ export type Book = {
   freeShipping?: boolean;
   /** 书籍描述 / 转让原因 */
   description: string;
-  /** 封面图 dataURL，未上传时使用生成的渐变封面 */
+  /** 封面图 dataURL（第一张实拍图），未上传时使用生成的渐变封面 */
   cover?: string;
+  /**
+   * 实拍图集（完整、含封面为首张）；多于一张时详情弹层展示图集。
+   * 市集列表接口为控制包体不下发此字段，仅以 imageCount 提示张数。
+   */
+  images?: string[];
+  /** 实拍图总数（列表瘦身后的提示；>1 时详情需按需拉取图集） */
+  imageCount?: number;
   /** 卖家昵称 */
   sellerName: string;
   /** 卖家微信号 */
@@ -64,7 +71,10 @@ export const BOOK_STATUS_LABEL: Record<BookStatus, string> = {
 export type BookInput = Omit<
   Book,
   "id" | "createdAt" | "sold" | "ownerId" | "status" | "reviewNote" | "reviewedAt"
->;
+> & {
+  /** 附加实拍图（不含封面，最多 5 张；发布入参专用语义） */
+  images?: string[];
+};
 
 export type Profile = {
   nickname: string;

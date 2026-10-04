@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Images } from "lucide-react";
 import { BookCover } from "./book-cover";
 import { formatPrice, timeAgo } from "@/lib/seed";
 import type { Book } from "@/lib/types";
@@ -57,6 +58,15 @@ export function BookCard({ book, index = 0, onOpen }: Props) {
           >
             {book.condition}
           </span>
+          {(book.imageCount ?? book.images?.length ?? 0) > 1 ? (
+            <span
+              className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-stone-950/50 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm"
+              data-testid="image-count-chip"
+            >
+              <Images className="h-3 w-3" aria-hidden />
+              {book.imageCount ?? book.images?.length}图
+            </span>
+          ) : null}
         </div>
 
         <div className="space-y-1.5 p-3">

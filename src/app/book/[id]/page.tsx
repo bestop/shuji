@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, BookOpen, Clock3, Layers, Tag, Truck } from "lucide-react";
 import { hasDb, getDb } from "@/lib/db";
+import { parseExtraImages } from "@/lib/book-server";
 import { formatPrice, timeAgo } from "@/lib/seed";
 import { cn } from "@/lib/utils";
 import { LandingShareGuide } from "@/components/landing-share-guide";
@@ -57,6 +58,12 @@ export default async function BookLanding({ params }: Props) {
   const b = await fetchBook(id);
   if (!b || b.status !== "APPROVED") notFound();
 
+  // 实拍图集：封面为首张 + 附加图；多图时在卡图下方展示横滑条
+  const gallery = [
+    ...(b.cover ? [b.cover] : []),
+    ...parseExtraImages(b.images),
+  ];
+
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-lg px-4 pb-16 pt-[max(0.875rem,env(safe-area-inset-top))]">
@@ -78,6 +85,24 @@ export default async function BookLanding({ params }: Props) {
           height={630}
           className="mt-4 w-full rounded-2xl border border-stone-200/60 shadow-sm"
         />
+
+        {/* 实拍图横滑条（多图时展示） */}
+        {gallery.length > 1 ? (
+          <div
+            className="mt-3 flex gap-2 overflow-x-auto pb-1"
+            data-testid="landing-gallery"
+          >
+            {gallery.map((src, i) => (
+              <img
+                key={`${i}-${src.slice(-24)}`}
+                src={src}
+                alt={`《${b.title}》实拍图 ${i + 1}`}
+                className="h-24 w-24 shrink-0 rounded-xl border border-stone-200/60 object-cover"
+                loading="lazy"
+              />
+            ))}
+          </div>
+        ) : null}
 
         {/* 书籍信息 */}
         <section className="mt-5 rounded-2xl border border-stone-200/60 bg-white p-5">

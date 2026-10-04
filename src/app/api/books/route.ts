@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { hasDb, getDb, getDbName } from "@/lib/db";
-import { mapBook, validateBookPayload } from "@/lib/book-server";
+import { mapBook, stripImagesForList, validateBookPayload } from "@/lib/book-server";
 import { isAdminRequest, isReviewEnabled } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +32,8 @@ export async function GET(req: Request) {
       enabled: true,
       db: getDbName(),
       review: isReviewEnabled(),
-      books: rows.map(mapBook),
+      // 列表瘦身：多图书不下发图集（仅 imageCount），详情打开时按需拉取
+      books: rows.map((r) => stripImagesForList(mapBook(r))),
     });
   } catch (e) {
     console.error("[books:GET]", e);

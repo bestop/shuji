@@ -13,7 +13,7 @@ import { BookCover } from "./book-cover";
 import { compressImage } from "@/lib/image";
 import { CONDITIONS, CATEGORIES } from "@/lib/types";
 import type { BookInput, Condition, Profile } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { MAX_BOOK_IMAGES, cn } from "@/lib/utils";
 
 type Props = {
   open: boolean;
@@ -30,7 +30,7 @@ const inputCls =
 
 export function PublishSheet({ open, onOpenChange, profile, reviewRequired, onPublish, onGoProfile }: Props) {
 
-  const [cover, setCover] = useState<string | undefined>(undefined);
+  const [pics, setPics] = useState<string[]>([]);
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [category, setCategory] = useState<string>("文学小说");
@@ -49,7 +49,7 @@ export function PublishSheet({ open, onOpenChange, profile, reviewRequired, onPu
   }, [open]);
 
   const resetForm = () => {
-    setCover(undefined);
+    setPics([]);
     setTitle("");
     setAuthor("");
     setCategory("文学小说");
@@ -60,27 +60,59 @@ export function PublishSheet({ open, onOpenChange, profile, reviewRequired, onPu
     setDescription("");
   };
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  /** 多选追加图片：逐张校验→压缩→追加，超出上限的文件提示并忽略 */
+  const handleFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
     e.target.value = "";
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("请选择图片文件");
+    if (!files.length) return;
+
+    const room = MAX_BOOK_IMAGES - pics.length;
+    if (room <= 0) {
+      toast.error(`最多上传 ${MAX_BOOK_IMAGES} 张图片`);
       return;
     }
-    if (file.size > 8 * 1024 * 1024) {
-      toast.error("图片过大", { description: "请选择 8MB 以内的图片" });
-      return;
+    if (files.length > room) {
+      toast.error(`最多上传 ${MAX_BOOK_IMAGES} 张图片`, {
+        description: `还能再选 ${room} 张，已自动选取前 ${room} 张`,
+      });
     }
+
     setCompressing(true);
-    try {
-      const dataUrl = await compressImage(file);
-      setCover(dataUrl);
-    } catch {
-      toast.error("图片处理失败，请换一张试试");
-    } finally {
-      setCompressing(false);
+    const added: string[] = [];
+    for (const file of files.slice(0, room)) {
+      if (!file.type.startsWith("image/")) {
+        toast.error(`「${file.name}」不是图片，已跳过`);
+        continue;
+      }
+      if (file.size > 8 * 1024 * 1024) {
+        toast.error(`「${file.name}」超过 8MB，已跳过`);
+        continue;
+      }
+      try {
+        added.push(await compressImage(file));
+      } catch {
+        toast.error(`「${file.name}」处理失败，已跳过`);
+      }
     }
+    if (added.length) {
+      setPics((prev) => [...prev, ...added].slice(0, MAX_BOOK_IMAGES));
+    }
+    setCompressing(false);
+  };
+
+  /** 移除第 i 张（若移除的是封面，下一张自动顶上成为新封面） */
+  const removePic = (i: number) => {
+    setPics((prev) => prev.filter((_, idx) => idx !== i));
+  };
+
+  /** 将第 i 张设为封面（移到最前） */
+  const makeCover = (i: number) => {
+    setPics((prev) => {
+      if (i <= 0 || i >= prev.length) return prev;
+      const next = [...prev];
+      const [picked] = next.splice(i, 1);
+      return [picked, ...next];
+    });
   };
 
   const handleSubmit = async () => {
@@ -99,6 +131,7 @@ export function PublishSheet({ open, onOpenChange, profile, reviewRequired, onPu
 
     setSubmitting(true);
     try {
+      // 入参约定：cover = 第一张（封面），images = 附加图（不含封面，最多 5 张）
       const ok = await onPublish({
         title: t,
         author: author.trim() || "佚名",
@@ -108,7 +141,8 @@ export function PublishSheet({ open, onOpenChange, profile, reviewRequired, onPu
         originalPrice: op,
         freeShipping,
         description: description.trim(),
-        cover,
+        cover: pics[0],
+        images: pics.slice(1),
         sellerName: profile.nickname || "书友",
         sellerWechat: w,
       });
@@ -171,50 +205,93 @@ export function PublishSheet({ open, onOpenChange, profile, reviewRequired, onPu
               </div>
             ) : null}
 
-            {/* 封面 */}
+            {/* 图片（最多 6 张，第一张为封面） */}
             <div>
-              <label className="mb-2 block text-[13px] font-semibold text-stone-700">
-                封面图 <span className="font-normal text-stone-400">（不上传则自动生成素雅书封）</span>
-              </label>
-              {cover ? (
-                <div className="relative w-28">
-                  <img
-                    src={cover}
-                    alt="已选封面"
-                    className="aspect-[3/4] w-28 rounded-lg border border-stone-200 object-cover"
-                  />
+              <div className="mb-2 flex items-baseline justify-between">
+                <label className="text-[13px] font-semibold text-stone-700">
+                  图片{" "}
+                  <span className="font-normal text-stone-400">
+                    （最多 {MAX_BOOK_IMAGES} 张，不上传则自动生成素雅书封）
+                  </span>
+                </label>
+                <span
+                  className="text-[11px] tabular-nums text-stone-400"
+                  data-testid="pic-counter"
+                >
+                  {pics.length}/{MAX_BOOK_IMAGES}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {pics.map((src, i) => (
+                  <div
+                    key={`${i}-${src.slice(-24)}`}
+                    className="group relative aspect-square"
+                  >
+                    <img
+                      src={src}
+                      alt={`第 ${i + 1} 张实拍图`}
+                      className="h-full w-full rounded-lg border border-stone-200 object-cover"
+                    />
+                    {i === 0 ? (
+                      <span
+                        className="absolute left-1.5 top-1.5 rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-sm"
+                        data-testid="cover-badge"
+                      >
+                        封面
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => makeCover(i)}
+                        className="absolute inset-x-1.5 bottom-1.5 rounded bg-stone-950/55 py-1 text-[10px] font-medium text-white backdrop-blur-sm transition-colors hover:bg-stone-950/75"
+                        aria-label={`将第 ${i + 1} 张设为封面`}
+                      >
+                        设为封面
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removePic(i)}
+                      className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-stone-800 text-white shadow-md transition-colors hover:bg-stone-700"
+                      aria-label={`移除第 ${i + 1} 张图片`}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+                {pics.length < MAX_BOOK_IMAGES ? (
                   <button
                     type="button"
-                    onClick={() => setCover(undefined)}
-                    className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-stone-800 text-white shadow-md"
-                    aria-label="移除封面"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={compressing}
+                    className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-stone-300 bg-stone-50 text-stone-400 transition-colors hover:border-primary/50 hover:text-primary"
+                    aria-label="添加图片"
                   >
-                    <X className="h-3.5 w-3.5" />
+                    {compressing ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <ImagePlus className="h-5 w-5" />
+                    )}
+                    <span className="text-[11px]">
+                      {compressing ? "处理中…" : "添加图片"}
+                    </span>
                   </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  disabled={compressing}
-                  className="flex aspect-[3/4] w-28 flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-stone-300 bg-stone-50 text-stone-400 transition-colors hover:border-primary/50 hover:text-primary"
-                >
-                  {compressing ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <ImagePlus className="h-5 w-5" />
-                  )}
-                  <span className="text-[11px]">{compressing ? "处理中…" : "上传实拍图"}</span>
-                </button>
-              )}
+                ) : null}
+              </div>
               <input
                 ref={fileRef}
                 type="file"
                 accept="image/*"
+                multiple
                 className="hidden"
-                onChange={handleFile}
-                aria-label="选择封面图片"
+                onChange={handleFiles}
+                aria-label="选择实拍图片，可多选"
               />
+              <p className="mt-1.5 text-[11px] leading-relaxed text-stone-400">
+                {pics.length > 1
+                  ? "点击图片上的「设为封面」可更换列表展示图，第一张为封面"
+                  : "多传几张实物照片（书角、内页、笔记），买家更放心"}
+              </p>
             </div>
 
             {/* 书名 / 作者 */}
@@ -418,7 +495,7 @@ export function PublishSheet({ open, onOpenChange, profile, reviewRequired, onPu
                   bookId="preview"
                   title={title || "书名"}
                   author={author || undefined}
-                  cover={cover}
+                  cover={pics[0]}
                   className="aspect-[3/4] w-16 rounded-md"
                 />
                 <div className="min-w-0 flex-1 space-y-1">

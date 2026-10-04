@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { hasDb, getDb, getDbName } from "@/lib/db";
-import { mapBook } from "@/lib/book-server";
+import { mapBook, stripImagesForList } from "@/lib/book-server";
 import { isAdminRequest } from "@/lib/admin";
 import type { BookStatus } from "@/lib/types";
 
@@ -17,7 +17,8 @@ export async function GET() {
   try {
     const db = getDb();
     const rows = await db.book.findMany({ orderBy: { createdAt: "desc" } });
-    const books = rows.map(mapBook);
+    // 瘦身：管理面板列表同样不下发多图图集，避免包体膨胀
+    const books = rows.map((r) => stripImagesForList(mapBook(r)));
     const counts: Record<BookStatus, number> = {
       PENDING: 0,
       APPROVED: 0,

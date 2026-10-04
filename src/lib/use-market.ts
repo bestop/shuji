@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import type { Book, BookInput } from "./types";
 import { useStore } from "./store";
 import { getDeviceId } from "./device";
+import { toGallery } from "./utils";
 
 export type MarketMode = "unknown" | "server" | "local";
 
@@ -117,6 +118,8 @@ export function useMarket(): UseMarketReturn {
       const myId = getDeviceId();
       const temp: Book = {
         ...input,
+        // 乐观插入的临时书同样把附加图合并为完整图集，保持 Book.images 语义一致
+        images: toGallery(input.cover, input.images),
         id: `temp-${Date.now()}`,
         ownerId: myId,
         sold: false,

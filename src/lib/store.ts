@@ -6,6 +6,7 @@ import type { Book, Profile } from "./types";
 import type { BookInput } from "./types";
 import { SEED_BOOKS, genId } from "./seed";
 import { getDeviceId } from "./device";
+import { toGallery } from "./utils";
 
 type State = {
   books: Book[];
@@ -27,8 +28,11 @@ export const useStore = create<State>()(
       profile: { nickname: "爱书的你", wechatId: "" },
 
       addBook: (input) => {
+        // 入参 images 为附加图（不含封面）；本地书籍统一存完整图集
+        const gallery = toGallery(input.cover, input.images);
         const book: Book = {
           ...input,
+          images: gallery,
           id: genId(),
           createdAt: Date.now(),
           sold: false,

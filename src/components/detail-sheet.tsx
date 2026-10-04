@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Copy,
@@ -25,9 +25,136 @@ import {
 import { BookCover } from "./book-cover";
 import { formatPrice, timeAgo } from "@/lib/seed";
 import { copyText } from "@/lib/image";
+import { getDeviceId } from "@/lib/device";
 import { buildBookShare, isWeChat, markShareJump } from "@/lib/share";
 import type { Book } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+/** 图集按需拉取缓存：同一本书的详情反复打开不重复请求 */
+const galleryCache = new Map<string, string[]>();
+
+/**
+ * 封面 / 实拍图集：
+ * - 单图书直接用 BookCover（兼容渐变素书封），视觉与历史版本一致
+ * - 多图书展示主图 + 缩略图条 + 计数；列表瘦身过的书按需拉取图集
+ * 以 key={book.id} 挂载，换书即重挂载，无需手动重置内部状态
+ */
+function BookGallery({ book }: { book: Book }) {
+  const [fetched, setFetched] = useState<{ id: string; images: string[] } | null>(null);
+  const [active, setActive] = useState(0);
+
+  // 渲染期派生图集：null 表示列表未携带且无缓存，需要按需拉取
+  let derived: string[] | null;
+  if (book.images) {
+    derived = book.images;
+  } else if (fetched && fetched.id === book.id) {
+    derived = fetched.images;
+  } else if ((book.imageCount ?? 0) > 1) {
+    derived = galleryCache.get(book.id) ?? null;
+  } else {
+    derived = book.cover ? [book.cover] : [];
+  }
+
+  const bookId = book.id;
+  const cover = book.cover;
+  const needsFetch = derived === null;
+
+  // 拉取失败也写入回退结果，避免同会话内反复重试；不阻塞详情浏览
+  useEffect(() => {
+    if (!needsFetch) return;
+    let cancelled = false;
+    const fallback = cover ? [cover] : [];
+    fetch(
+      `/api/books/${encodeURIComponent(bookId)}?owner=${encodeURIComponent(getDeviceId())}`
+    )
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((d: { book?: Book }) => {
+        if (cancelled) return;
+        const imgs = d.book?.images;
+        const next = imgs && imgs.length > 1 ? imgs : fallback;
+        galleryCache.set(bookId, next);
+        setFetched({ id: bookId, images: next });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        galleryCache.set(bookId, fallback);
+        setFetched({ id: bookId, images: fallback });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [needsFetch, bookId, cover]);
+
+  const pics = derived ?? [];
+  const multi = pics.length > 1;
+  const activeIdx = Math.min(active, pics.length - 1);
+
+  return (
+    <div className="relative px-4 pt-3">
+      <div className="relative">
+        {multi ? (
+          <img
+            src={pics[activeIdx]}
+            alt={`《${book.title}》实拍图 ${activeIdx + 1}`}
+            className="aspect-[4/3] w-full rounded-xl object-cover shadow-sm"
+            data-testid="gallery-main"
+          />
+        ) : (
+          <BookCover
+            bookId={book.id}
+            title={book.title}
+            author={book.author}
+            cover={book.cover}
+            size="lg"
+            className="aspect-[4/3] w-full rounded-xl shadow-sm"
+          />
+        )}
+        {multi ? (
+          <span
+            className="absolute bottom-3 right-3 rounded-full bg-stone-950/55 px-2.5 py-1 text-[11px] font-medium tabular-nums text-white backdrop-blur-sm"
+            data-testid="gallery-counter"
+          >
+            {activeIdx + 1}/{pics.length}
+          </span>
+        ) : null}
+        {book.sold ? (
+          <span className="absolute left-7 top-7 rotate-[-8deg] rounded-md border-2 border-white/90 bg-stone-950/30 px-3 py-1 font-serif-sc text-base font-bold tracking-[0.2em] text-white">
+            已售出
+          </span>
+        ) : null}
+      </div>
+      {multi ? (
+        <div
+          className="mt-2 flex gap-2 overflow-x-auto pb-0.5"
+          data-testid="gallery-thumbs"
+        >
+          {pics.map((src, i) => (
+            <button
+              key={`${i}-${src.slice(-24)}`}
+              type="button"
+              onClick={() => setActive(i)}
+              aria-label={`查看第 ${i + 1} 张图片`}
+              aria-current={i === activeIdx}
+              className={cn(
+                "h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition-all",
+                i === activeIdx
+                  ? "border-primary opacity-100"
+                  : "border-transparent opacity-70 hover:opacity-100"
+              )}
+            >
+              <img
+                src={src}
+                alt=""
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 type Props = {
   book: Book | null;
@@ -101,22 +228,8 @@ export function DetailSheet({
         <div className="max-h-[86vh] overflow-y-auto overscroll-contain rounded-t-2xl">
           <DrawerTitle className="sr-only">《{book.title}》详情</DrawerTitle>
 
-          {/* 封面 */}
-          <div className="relative px-4 pt-3">
-            <BookCover
-              bookId={book.id}
-              title={book.title}
-              author={book.author}
-              cover={book.cover}
-              size="lg"
-              className="aspect-[4/3] w-full rounded-xl shadow-sm"
-            />
-            {book.sold ? (
-              <span className="absolute left-7 top-7 rotate-[-8deg] rounded-md border-2 border-white/90 bg-stone-950/30 px-3 py-1 font-serif-sc text-base font-bold tracking-[0.2em] text-white">
-                已售出
-              </span>
-            ) : null}
-          </div>
+          {/* 封面 / 实拍图集（key=书 id，换书即重置选中态与拉取状态） */}
+          <BookGallery key={book.id} book={book} />
 
           <div className="space-y-4 px-5 pb-4 pt-4">
             {/* 价格与标题 */}

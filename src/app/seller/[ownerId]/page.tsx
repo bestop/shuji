@@ -43,6 +43,21 @@ const fetchSellerBooks = cache(
           ...(sellerName ? { sellerName } : {}),
         },
         orderBy: { createdAt: "desc" },
+        // 显式选列：书摊页只需要卡片字段，避免大字段（实拍图集/描述）进 RSC payload
+        select: {
+          id: true,
+          title: true,
+          author: true,
+          category: true,
+          condition: true,
+          price: true,
+          originalPrice: true,
+          freeShipping: true,
+          cover: true,
+          sold: true,
+          sellerName: true,
+          createdAt: true,
+        },
       });
       // 未携带昵称参数时按最新一本书的昵称归摊，避免把不同摊主混在一页
       const name = sellerName || rows[0]?.sellerName;

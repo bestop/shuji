@@ -20,6 +20,8 @@ model Book {
   originalPrice Float?
   /// 是否由卖家承担运费（包邮）
   freeShipping  Boolean  @default(false)
+  /// 附加实拍图（dataURL 字符串数组，不含封面；封面存 cover，合计最多 6 张）
+  images        Json?
   description   String   @default("")
   cover         String?  @db.Text
   sellerName    String
