@@ -279,3 +279,21 @@ Work Log:
 Stage Summary:
 - 「···」转发出去的本书链接为纯 /book/{id}；应用内分享跳转 → 引导弹出改由会话标记驱动，URL 零污染
 - 好友反复打开链接/刷新均不再看到引导；旧 ?share=1 链接仍兼容
+
+---
+Task ID: 13
+Agent: Super Z (main agent)
+Task: 「点击卖家名字，显示卖家正在出售和已卖出的书」——卖家书摊页
+
+Work Log:
+- 新增 /seller/[ownerId]?name={sellerName} 服务端书摊页：摊位卡（衬线首字头像 + 「XX 的书摊」 + 在售/已卖出统计 + 全摊共用微信号时一键复制胶囊）+「正在出售」「已卖出」两分区书卡（空态各有文案）；书卡点击回 /?book={id} 自动弹详情
+- 关键设计：卖家身份按 ownerId+sellerName 组合定位——种子数据 12 个摊主共用 ownerId="seed"，仅按设备分组会把 12 个不同摊主混在一页；同设备改昵称的新旧书也按买家看到的昵称正确归摊；仅展示 APPROVED（待审/驳回书不外露），查不到书则 404
+- 404 场景配套新增中文 not-found 页（「这个页面走丢了」+ 回市集 CTA），全局生效
+- detail-sheet 卖家卡片整体改为 Link 跳书摊（chevron 指示），复制微信号按钮保留在卡内右侧；书籍落地页「由 XX 发布」加下划线书摊链接；fetchSellerBooks 用 React cache() 使 metadata 与页面同请求只查一次库
+- 沙箱连 Neon 凭据已被 Neon 侧拒绝（密码认证失败，.env.local 存的旧串失效）→ 本地仅 lint+build（均通过，/seller 动态路由无需 DB），e2e 走生产
+- verify-seller-page.mjs（Playwright）生产 17/17 通过：?book= 弹详情→点卖家名跳书摊（URL /seller/seed?name=）→ 统计/书卡/空态/微信号/返回入口 → 书摊点书卡回弹详情 → 半亩方塘已售分区（已售水印）→ 落地页入口 → 404 status=404 + 中文页；截图目检两张摊位页视觉正常
+- 回归：verify-share-flow.mjs 生产 8/8 通过，分享闭环零回归；提交 f96067b，部署 dpl_3qooiZweZTU8nK91PWeaVUv9suZr READY
+
+Stage Summary:
+- 买家从任意书籍详情/落地页点卖家名即可逛 TA 的书摊：在售可挑、已卖出可看，微信号一键复制
+- 待办提醒：Neon 密码疑似已轮换，下次需要在本地跑 DB 相关验证时向用户要新连接串
