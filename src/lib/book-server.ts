@@ -68,7 +68,10 @@ export function validateBookPayload(body: Record<string, unknown>):
   const cover = str(body.cover) || undefined;
   const price = Number(body.price);
   const originalPriceRaw = body.originalPrice;
-  const freeShipping = body.freeShipping === true || body.freeShipping === "true";
+  const freeShipping =
+    body.freeShipping === true ||
+    body.freeShipping === "true" ||
+    body.freeShipping === 1;
 
   if (!title || title.length > 60) return { ok: false, error: "书名不能为空且不超过 60 字" };
   if (!Number.isFinite(price) || price <= 0 || price > 99999)

@@ -234,6 +234,7 @@ export function ProfilePage({
                 </p>
                 <p className="mt-0.5 text-xs text-stone-400">
                   {b.condition} · {b.category}
+                  {b.freeShipping ? " · 包邮" : ""}
                 </p>
                 <p className="mt-1 text-sm font-bold text-[#C2540A]">
                   ¥{formatPrice(b.price)}

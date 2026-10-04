@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ImagePlus, Loader2, UserRoundPlus, X } from "lucide-react";
+import { HandCoins, ImagePlus, Loader2, UserRoundPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   Drawer,
@@ -336,7 +336,7 @@ export function PublishSheet({ open, onOpenChange, profile, reviewRequired, onPu
             {/* 运费 */}
             <div>
               <p className="mb-2 text-[13px] font-semibold text-stone-700">运费</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div role="group" aria-label="运费方式" className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setFreeShipping(true)}
@@ -362,6 +362,7 @@ export function PublishSheet({ open, onOpenChange, profile, reviewRequired, onPu
                   )}
                   aria-pressed={!freeShipping}
                 >
+                  <HandCoins className="h-3.5 w-3.5" aria-hidden />
                   运费自付
                 </button>
               </div>

@@ -36,6 +36,7 @@ const SEEDS = [
     condition: "轻微使用",
     price: 25,
     originalPrice: 108,
+    freeShipping: true,
     description:
       "北京十月文艺出版社的版本，大三读完想传给下一个需要在孙少平身上找力气的人。书脊有轻微折痕，内页干净，仅有少量铅笔划线，可擦。",
     sellerName: "南山书屋",
@@ -78,6 +79,7 @@ const SEEDS = [
     condition: "几乎全新",
     price: 12,
     originalPrice: 39,
+    freeShipping: true,
     description:
       "郭宏安译本，装帧是很温柔的米色。一个下午就能读完，但值得每隔几年重读一次。买重复了，出一本。",
     sellerName: "麦田里的守望猫",
@@ -201,12 +203,17 @@ const SEEDS = [
 
 async function main() {
   for (const s of SEEDS) {
-    const { sold, ...data } = s as (typeof SEEDS)[number] & { sold?: boolean };
+    const { sold, freeShipping, ...data } = s as (typeof SEEDS)[number] & {
+      sold?: boolean;
+      freeShipping?: boolean;
+    };
     await prisma.book.upsert({
       where: { id: s.id },
-      update: {},
+      // 重跑时同步运费标记（幂等修复库内种子数据，不碰其他字段）
+      update: { freeShipping: Boolean(freeShipping) },
       create: {
         ...data,
+        freeShipping: Boolean(freeShipping),
         sold: Boolean(sold),
         status: "APPROVED",
         ownerId: "seed",

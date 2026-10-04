@@ -29,8 +29,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   const title = `《${b.title}》仅售 ¥${formatPrice(b.price)} · 易书`;
   const desc = `${b.author} 著 · ${b.condition}${
-    b.description ? ` · ${b.description.slice(0, 60)}` : ""
-  }。上易书联系书友，让好书流动起来。`;
+    b.freeShipping ? " · 包邮" : ""
+  }${b.description ? ` · ${b.description.slice(0, 60)}` : ""}。上易书联系书友，让好书流动起来。`;
   const og = `/api/og/book/${b.id}`;
   return {
     title,
@@ -103,7 +103,7 @@ export default async function BookLanding({ params }: Props) {
             发布
           </p>
 
-          <div className="mt-4 flex items-baseline gap-2">
+          <div className="mt-4 flex flex-wrap items-baseline gap-x-2 gap-y-1.5">
             <span className="text-lg font-bold text-[#C2540A]">¥</span>
             <span className="text-3xl font-bold leading-none tracking-tight text-[#C2540A]">
               {formatPrice(b.price)}

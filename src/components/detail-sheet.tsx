@@ -121,7 +121,7 @@ export function DetailSheet({
           <div className="space-y-4 px-5 pb-4 pt-4">
             {/* 价格与标题 */}
             <div>
-              <div className="flex items-baseline gap-2">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1.5">
                 <span className="text-lg font-bold text-[#C2540A]">¥</span>
                 <span className="text-3xl font-bold leading-none tracking-tight text-[#C2540A]">
                   {formatPrice(book.price)}
@@ -131,20 +131,22 @@ export function DetailSheet({
                     原价 ¥{formatPrice(book.originalPrice)}
                   </span>
                 ) : null}
-                <span
-                  className={cn(
-                    "ml-auto flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px]",
-                    book.freeShipping
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-stone-100 text-stone-500"
-                  )}
-                >
-                  <Truck className="h-3 w-3" aria-hidden />
-                  {book.freeShipping ? "包邮" : "运费自付"}
-                </span>
-                <span className="rounded-full bg-stone-100 px-2.5 py-1 text-[11px] text-stone-600">
-                  {book.condition}
-                </span>
+                <div className="ml-auto flex items-center gap-1.5">
+                  <span
+                    className={cn(
+                      "flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px]",
+                      book.freeShipping
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-stone-100 text-stone-500"
+                    )}
+                  >
+                    <Truck className="h-3 w-3" aria-hidden />
+                    {book.freeShipping ? "包邮" : "运费自付"}
+                  </span>
+                  <span className="rounded-full bg-stone-100 px-2.5 py-1 text-[11px] text-stone-600">
+                    {book.condition}
+                  </span>
+                </div>
               </div>
               <h2 className="mt-2 font-serif-sc text-xl font-bold leading-snug text-stone-900">
                 {book.title}
