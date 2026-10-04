@@ -45,7 +45,7 @@ try {
   ok("点分享后整页跳转落地页", true, page.url());
 
   // 落地页自动弹出转发引导（延迟 400ms）
-  await page.waitForSelector("text=点击右上角「···」菜单", { timeout: 6000 });
+  await page.waitForSelector("text=把这本书转发给朋友", { timeout: 6000 });
   ok("落地页自动弹出转发引导", true);
   // 引导浮层内嵌分享卡图（长按直发/保存/识码）
   const cardImg = page.locator('[aria-label="分享引导"] img[src*="/api/og/book/"]');
@@ -59,7 +59,7 @@ try {
   // 引导浮层点「我知道了」可关闭
   await page.click("text=我知道了");
   await page.waitForTimeout(400);
-  const guideGone = (await page.locator("text=点击右上角「···」菜单").count()) === 0;
+  const guideGone = (await page.locator("text=把这本书转发给朋友").count()) === 0;
   ok("点「我知道了」关闭引导", guideGone);
   await ctx.close();
 
@@ -74,7 +74,7 @@ try {
   const bookId = m ? m[1] : "seed-04";
   await p2.goto(`${BASE}/book/${bookId}`, { waitUntil: "networkidle", timeout: 45000 });
   await p2.waitForTimeout(900);
-  const noGuide = (await p2.locator("text=点击右上角「···」菜单").count()) === 0;
+  const noGuide = (await p2.locator("text=把这本书转发给朋友").count()) === 0;
   ok("好友视角打开落地页不弹引导", noGuide);
   await ctx2.close();
 
@@ -83,7 +83,7 @@ try {
   const p3 = await ctx3.newPage();
   await p3.goto(`${BASE}/book/${bookId}?share=1`, { waitUntil: "networkidle", timeout: 45000 });
   await p3.waitForTimeout(900);
-  const noGuide3 = (await p3.locator("text=点击右上角「···」菜单").count()) === 0;
+  const noGuide3 = (await p3.locator("text=把这本书转发给朋友").count()) === 0;
   ok("非微信 UA 访问 ?share=1 不弹引导", noGuide3);
   await ctx3.close();
 } catch (e) {
