@@ -160,34 +160,41 @@ export async function GET(req: Request, { params }: Params) {
           justifyContent: "space-between",
         }}
       >
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          {ok && !book!.sold ? (
-            <>
-              <span style={{ fontSize: 40, fontWeight: 600 }}>¥</span>
-              <span style={{ fontSize: 72, fontWeight: 600, letterSpacing: 2 }}>
-                {formatPrice(book!.price)}
-              </span>
-              {book!.freeShipping ? (
-                <span
-                  style={{
-                    fontSize: 24,
-                    fontWeight: 600,
-                    letterSpacing: 2,
-                    padding: "8px 26px",
-                    border: "2px solid rgba(255,255,255,0.8)",
-                    borderRadius: 40,
-                    marginLeft: 14,
-                  }}
-                >
-                  包邮
+        <div style={{ display: "flex", alignItems: "flex-end" }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            {ok && !book!.sold ? (
+              <>
+                <span style={{ fontSize: 40, fontWeight: 600 }}>¥</span>
+                <span style={{ fontSize: 72, fontWeight: 600, letterSpacing: 2 }}>
+                  {formatPrice(book!.price)}
                 </span>
-              ) : null}
-            </>
-          ) : (
-            <span style={{ fontSize: ok ? 60 : 44, fontWeight: 600, letterSpacing: 4 }}>
-              {ok ? "已售出" : "让好书流动起来"}
+              </>
+            ) : (
+              <span style={{ fontSize: ok ? 60 : 44, fontWeight: 600, letterSpacing: 4 }}>
+                {ok ? "已售出" : "让好书流动起来"}
+              </span>
+            )}
+          </div>
+          {ok && !book!.sold && book!.freeShipping ? (
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: 54,
+                padding: "0 26px",
+                border: "2px solid rgba(255,255,255,0.8)",
+                borderRadius: 27,
+                fontSize: 24,
+                fontWeight: 600,
+                letterSpacing: 2,
+                marginLeft: 14,
+                marginBottom: 10,
+              }}
+            >
+              包邮
             </span>
-          )}
+          ) : null}
         </div>
         {qr ? (
           <div
