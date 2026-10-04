@@ -356,3 +356,21 @@ Stage Summary:
 - 发布可传最多 6 张实拍图：第一张即封面（列表/OG 卡/分享缩略图用它），详情弹层多图画廊可切换，落地页横滑条展示全图
 - 列表接口瘦身：多图图集按需拉取，书单响应不随图片数量膨胀（生产可靠性关键）
 - 本地已全部验证通过；待用户提供 GitHub PAT（或 Vercel token）即可推送部署上线
+
+---
+Task ID: 16-b
+Agent: Super Z (main agent)
+Task: 「图片最多上传 6 张」生产部署、验证与回归修复（用户提供 GitHub PAT + Vercel token）
+
+Work Log:
+- git push 6d5f947（多图功能 8006824 + worklog）→ Vercel 自动部署 dpl_2J2KrdLxrWM64CGyZZtS2Xs1hq6E READY
+- 生产验证发现真回归：verify-seller-page 16/17，「微信号胶囊可复制」失败——根因为 Task 16 给卖家书摊页加显式 select 防大字段时遗漏 sellerWechat，摊位卡 sharedWechat 恒为 undefined，胶囊不再渲染（TS 错误被 ignoreBuildErrors 掩盖）
+- 修复 b3ec339：SellerBook 类型 + select 双补 sellerWechat；全库排查确认仅此一处显式 select，无同类风险；lint/tsc(seller 无错)/build 通过后推送，dpl_8eFc1PJ9B1bdLBLzXSfXmFHDCEKH READY
+- 生产四套件全绿：卖家书摊 17/17（胶囊恢复）、多图 prod 只读 10/10、包邮 8/8、分享闭环 8/8
+- 新增 scripts/snapshot-prod-form.mjs 生产目检：发布表单选满 6 张 → 计数 6/6、首张封面绿徽章、其余「设为封面」胶囊、达上限添加按钮隐藏（截图 verify-39-prod-form-grid.png，未发布任何数据）
+- 凭据使用方式：PAT 一次性内嵌 push URL（remote 无残留）；Vercel token 仅 API 轮询部署状态
+
+Stage Summary:
+- 「图片最多上传 6 张」功能正式上线 https://ys.hikid.vip：表单图集网格（n/6 计数/封面管理/超量截取）、详情图集画廊、列表瘦身按需拉取、落地页横滑条
+- 多图 select 瘦身引入的微信号胶囊回归已修复并验证，回归基线 43/43 全绿
+- 既有噪音记录：src/lib/store.ts:82 存在 v1→v2 迁移期 TS 断言错误（被 ignoreBuildErrors 掩盖，运行时行为经历史 E2E 验证正确，未改动）
