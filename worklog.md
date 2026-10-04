@@ -297,3 +297,21 @@ Work Log:
 Stage Summary:
 - 买家从任意书籍详情/落地页点卖家名即可逛 TA 的书摊：在售可挑、已卖出可看，微信号一键复制
 - 待办提醒：Neon 密码疑似已轮换，下次需要在本地跑 DB 相关验证时向用户要新连接串
+
+---
+Task ID: 14
+Agent: Super Z (main agent)
+Task: Neon 连接修复——主机名格式升级迁移（本地 .env.local + Vercel 生产环境变量）
+
+Work Log:
+- 用户从 Neon 控制台提供新连接信息：主机名新增 .c-4 段（ep-delicate-king-b3b2kymr[-pooler].c-4.ap-southeast-1.aws.neon.tech），密码/库未变；片段默认库为 neondb（无 books 表，仅 Neon 默认库），应用库仍为 neon-shuji
+- 连通性矩阵实测定性：Task 13 记录的「密码疑似轮换」结论有误——密码未轮换，是 Neon 主机名格式升级导致旧格式主机名认证失效（旧 host 报 28P01，新 .c-4 host 直接连通，neon-shuji books=12 数据完好）
+- 本地 .env.local 更新为 .c-4 主机名（pooler→SHUJI_DATABASE_URL，直连→SHUJI_DIRECT_URL，库名保持 neon-shuji）；本地 dev 冒烟：/api/books 返回 12 本、卖家书摊页 200 正常渲染——沙箱本地 DB 验证能力恢复
+- 顺手清理：删除 .env（旧共享实例时代的死变量 DATABASE_URL，应用只认 SHUJI_*）
+- Vercel 生产环境变量同主机名前缀仍在用旧格式（当时可用，但 Neon 明确在迁移、随时会随旧格式退役而断）→ 通过 env API 按条目 PATCH 6 处（SHUJI_DATABASE_URL/SHUJI_DIRECT_URL × production/preview/development；POST upsert 因分 target 独立条目报 ENV_ALREADY_EXISTS，需按 env id 逐条 PATCH）；Neon 集成注入的 POSTGRES_*/PG* 遗留变量应用不读取，保持不动
+- 空提交 4c053a7 触发重部署 dpl_ESFu4pc58SwLrx8RT5jKCx6BGSEu READY；生产全验证：/api/books enabled+neon-shuji+13 本（含用户真实发布的《test》）、卖家页 17/17、分享闭环 8/8（本次恰好跑在非种子书上也通过）
+
+Stage Summary:
+- 本地与生产的 SHUJI_* 连接串统一迁移到 Neon 新主机名格式；本地 DB 验证能力恢复（下次本地 e2e 可直连真实数据）
+- 更正 worklog Task 13 的「密码轮换」误判：实际为主机名格式升级
+- 注意：.env.local 中无 SHUJI_ADMIN_PASSCODE（本地 review:false、发布免审；生产已有该变量、review:true），本地若要测管理员审核流需用户提供口令
